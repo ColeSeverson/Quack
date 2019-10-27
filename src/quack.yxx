@@ -45,15 +45,22 @@
     char*  str;
     /* Abstract syntax tree values */
     AST::ASTNode* node;  // Most general class
+    AST::Class* klass;
     AST::Ident* ident;   // Identifiers are used in many places
     AST::LExpr* l_expr;
     AST::Load*  load;
+    AST::Formal* formal;
+    AST::Method* method;
     AST::Statement* statement;
     AST::Expr* expr;
+    
     // Alas, looks like we need a member per sequence type
+    // These can all use the append method
     AST::Actuals* actuals;
     AST::Block* block;
     AST::Classes* classes;
+    AST::Formals* formals;
+    AST::Methods* methods;
     AST::Type_Alternatives* type_alternatives;
 }
 
@@ -62,7 +69,7 @@
  * the abstract syntax tree (AST)
  * ------------------------------------------
  */
-%type <ident> ident
+%type <ident> ident opt_extends
 %type <l_expr> l_expr
 %type <expr> expr
 %type <statement> statement
@@ -71,6 +78,7 @@
 %type <block> statements statement_block
 %type <actuals> actual_args actual_args_nonempty
 %type <block>  opt_elif_parts
+%type <klass> class class_signature
 
 /* -------------------------------------------
  * Tokens.
