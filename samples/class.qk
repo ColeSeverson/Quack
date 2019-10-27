@@ -1,3 +1,4 @@
 class Test(x: int) {
 }
+Test(5).PRINT();
 

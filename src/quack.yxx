@@ -54,6 +54,8 @@
     AST::Statement* statement;
     AST::Expr* expr;
     AST::Return* returns;
+    AST::Type_Alternative* type_alternative;
+    AST::Typecase* typecase;
     // Alas, looks like we need a member per sequence type
     // These can all use the append method
     AST::Actuals* actuals;
@@ -69,7 +71,7 @@
  * the abstract syntax tree (AST)
  * ------------------------------------------
  */
-%type <ident> ident opt_extends 
+%type <ident> ident opt_extends return_type 
 %type <l_expr> l_expr
 %type <expr> expr
 %type <statement> statement
@@ -79,11 +81,13 @@
 %type <formal> formal;
 %type <methods> methods;
 %type <method> method;
-%type <returns> returns;
 %type <block> statements statement_block
 %type <actuals> actual_args actual_args_nonempty
 %type <block>  opt_elif_parts
 %type <klass> class
+%type <type_alternatives> type_alternatives;
+%type <type_alternative> type_alternative;
+%type <typecase> typecase;
 
 /* -------------------------------------------
  * Tokens.
@@ -173,12 +177,13 @@ methods: /* empty */ {$$ = new AST::Methods(); }
        | methods method {$$ = $1; $$->append($2); }
 	;
 
-method: DEF ident '(' formals ')' returns
-      '{' statements '}'
-	{$$ = new AST::Method(*$2, *$4, *$6, *$8); }
+method: DEF ident '(' formals ')' return_type statement_block
+	{$$ = new AST::Method(*$2, *$4, *$6, *$7); }
 	;
 
-returns: ':' ident {$$ = new AST::Return(*$2); };
+return_type: ':' ident {$$ = $2;}
+	   | /* empty */ {$$ = new AST::Ident("None"); }
+	    ;
 /* Zero or more statements 
  * (although a program with zero statements is pretty boring) 
  */
@@ -207,6 +212,8 @@ statement_block: '{' statements '}'
  *   else
  *     { x = 0; }
  */ 
+statement: WHILE expr statement_block
+	 { $$ = new AST::While(*$2, *$3); };
 
 statement: IF expr statement_block  opt_elif_parts
 	       { $$ = new AST::If(*$2, *$3, *$4); }
@@ -240,6 +247,26 @@ statement: l_expr ':' ident '=' expr ';'
     }
     ;
 
+statement: RETURN expr ';' {$$ = new AST::Return(*$2); }; 
+
+statement: expr ';' {$$ = $1; };
+
+/*
+ * Typecase
+ */
+statement: typecase {$$ = $1; };
+
+typecase: TYPECASE expr '{' type_alternatives '}'
+	{$$ = new AST::Typecase(*$2, *$4); }
+	;
+type_alternatives: /* empty */ {$$ = new AST::Type_Alternatives(); }
+		 | type_alternatives ',' type_alternative 
+		{$$ = $1; $$->append($3); }
+		  ;
+
+type_alternative: ident ':' ident statement_block
+	       {$$ = new AST::Type_Alternative(*$1, *$3, *$4); };	
+
 /* l_expr: Things we can assign to, or call.
  * (Evaluate to a location; type checking determines
  * what type is compatible.)
@@ -248,7 +275,9 @@ statement: l_expr ':' ident '=' expr ';'
  *    Fields of the current object, this.x = expr; 
  *    Methods of any object, (3+4).PRINT, sqr.translate(1,1).translate
  */ 
-l_expr: IDENT { $$ =  new AST::Ident($1); } ;
+l_expr: IDENT { $$ =  new AST::Ident($1); } 
+      | expr '.' ident { $$ = new AST::Dot(*$1, *$3); }
+	;
 
 
 /* *************************************
@@ -257,6 +286,8 @@ l_expr: IDENT { $$ =  new AST::Ident($1); } ;
  *  that evaluate to values rather than locations)
  * *************************************
  */ 
+
+expr: '(' expr ')' {$$ = $2; };
 
 /* An l_expr is also an expr; we load the value 
  * from that address.  Even though this is a unit production,
@@ -285,9 +316,16 @@ expr:  expr '*' expr   { $$ = AST::Call::binop("TIMES", *$1, *$3); }
                               $$ = AST::Call::binop("MINUS", *zero, *$2);
                             }
     /* Comparisons */
+    | expr EQUALS expr {$$ = AST::Call::binop("EQUALS", *$1, *$3); }
+    | expr ATMOST expr {$$ = AST::Call::binop("ATMOST", *$1, *$3); }
+    | expr ATLEAST expr {$$ = AST::Call::binop("ATLEAST", *$1, *$3); }
+    | expr '<' expr {$$ = AST::Call::binop("LESS", *$1, *$3); }
+    | expr '>' expr {$$ = AST::Call::binop("GREATER", *$1, *$3); }
     /* Boolean expressions are NOT syntactic sugar */
     | expr AND   expr     { $$ = new AST::And(*$1, *$3); }
-    ;
+    | expr OR	 expr	  { $$ = new AST::Or(*$1, *$3); }
+    | NOT expr		  { $$ = new AST::Not(*$2); } 
+     ;
 
 
 
