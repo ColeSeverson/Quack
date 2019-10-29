@@ -248,6 +248,7 @@ statement: l_expr ':' ident '=' expr ';'
     ;
 
 statement: RETURN expr ';' {$$ = new AST::Return(*$2); }; 
+statement: RETURN ';' {$$ = new AST::Return(*new AST::Ident("none")); };
 
 statement: expr ';' {$$ = $1; };
 
