@@ -1,4 +1,7 @@
-class Test(x: int) {
+class Test(x: int, y: string, u: int) extends int {
+	def test() : int {
+	
+	}
 }
 Test(5).PRINT();
 
