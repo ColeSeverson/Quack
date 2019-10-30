@@ -264,8 +264,8 @@ typecase: TYPECASE expr '{' type_alternatives '}'
 	{$$ = new AST::Typecase(*$2, *$4); }
 	;
 type_alternatives: /* empty */ {$$ = new AST::Type_Alternatives(); }
-		 | type_alternatives ',' type_alternative 
-		{$$ = $1; $$->append($3); }
+		 | type_alternatives type_alternative 
+		{$$ = $1; $$->append($2); }
 		  ;
 
 type_alternative: ident ':' ident statement_block

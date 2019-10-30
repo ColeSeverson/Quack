@@ -1,0 +1,8 @@
+class test(){
+def EQUAL (other: obj): Boolean {
+	typecase other {
+		pt: Point { return this.x == pt.x; }
+		thing: Obj { return false; }
+	}
+}
+}
