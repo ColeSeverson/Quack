@@ -173,6 +173,9 @@ formals: /* empty */ {$$ = new AST::Formals();}
 
 formal: ident ':' ident	{$$ = new AST::Formal(*$1, *$3); }
       | ',' ident ':' ident {$$ = new AST::Formal(*$2, *$4); }
+      | error ':' ident {$$ = new AST::Formal(*new AST::Ident("Error"), *$3); }
+      | ident ':' error {$$ = new AST::Formal(*$1, *new AST::Ident("Error")); }
+
 	;
 
 methods: /* empty */ {$$ = new AST::Methods(); }
@@ -181,6 +184,8 @@ methods: /* empty */ {$$ = new AST::Methods(); }
 
 method: DEF ident '(' formals ')' return_type statement_block
 	{$$ = new AST::Method(*$2, *$4, *$6, *$7); }
+	| DEF ident '(' formals ')' return_type '{' error '}'
+        {$$ = new AST::Method(*$2, *$4, *$6, *new AST::Block());}
 	;
 
 return_type: ':' ident {$$ = $2;}
