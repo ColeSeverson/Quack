@@ -80,6 +80,10 @@ namespace AST {
             json_close(out, ctx);
         }
 
+        std::vector<Kind *> getElements() {
+            return this->elements_;
+        }
+
     };
 
     /* L_Expr nodes are AST nodes that can be evaluated for location.
@@ -109,6 +113,7 @@ namespace AST {
     public:
         explicit Ident(std::string txt) : text_{txt} {}
         void json(std::ostream& out, AST_print_context& ctx) override;
+        std::string getText() {return this->text_;};
     };
 
 
@@ -253,6 +258,8 @@ namespace AST {
             name_{name},  super_{super},
             constructor_{constructor}, methods_{methods} {};
         void json(std::ostream& out, AST_print_context& ctx) override;
+        Ident* getName() {return &this->name_;};
+        Ident* getSuper() {return &this->super_;};
     };
 
     /* A Quack program begins with a sequence of zero or more

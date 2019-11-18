@@ -1,0 +1,26 @@
+
+
+class a() {
+
+}
+
+class b() extends a {
+
+}
+
+class c() extends a {
+
+}
+
+class d() extends b {
+
+}
+class e() extends b {
+
+}
+class f() extends b {
+
+}
+class g() extends d {
+    
+}

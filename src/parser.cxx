@@ -68,12 +68,12 @@ int main(int argc, char **argv) {
             //Now we do the semantic checks 
 	    if (ClassChecker::CheckHierarchy(root) != 0) {
 	    	std::cout << "Class Hierarchy invalid terminating..." << std::endl;
-		exit(1);
+		    exit(1);
 	    }
 	    //Print the json if all goes correctly
-	    AST::AST_print_context context;
-            root->json(std::cout, context);
-            std::cout << std::endl;
+	    //AST::AST_print_context context;
+        //root->json(std::cout, context);
+        //std::cout << std::endl;
 
 
         } else {
