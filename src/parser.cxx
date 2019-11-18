@@ -6,6 +6,7 @@
 #include "lex.yy.h"
 #include "ASTNode.h"
 #include "Messages.h"
+#include "ClassChecker.h"
 
 #include <iostream>
 #include <unistd.h>  // getopt is here
@@ -64,10 +65,17 @@ int main(int argc, char **argv) {
         if (debug) driver.debug();
         AST::ASTNode *root = driver.parse();
         if (root != nullptr) {
-            // std::cout << "Parsed!\n";
-            AST::AST_print_context context;
+            //Now we do the semantic checks 
+	    if (ClassChecker::CheckHierarchy(root) != 0) {
+	    	std::cout << "Class Hierarchy invalid terminating..." << std::endl;
+		exit(1);
+	    }
+	    //Print the json if all goes correctly
+	    AST::AST_print_context context;
             root->json(std::cout, context);
             std::cout << std::endl;
+
+
         } else {
             std::cout << "No tree produced." << std::endl;
         }

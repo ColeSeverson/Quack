@@ -46,7 +46,7 @@ scanner: scanner.o lex.yy.o
 
 parser.o: quack.tab.hxx lex.yy.h
 
-$(BIN)/parser: parser.o quack.tab.o lex.yy.o ASTNode.o Messages.o
+$(BIN)/parser: parser.o quack.tab.o lex.yy.o ASTNode.o Messages.o ClassChecker.o
 	$(CC) $^ -o $(BIN)/parser -L /usr/local/lib  -lreflex
 
 ## General recipes
