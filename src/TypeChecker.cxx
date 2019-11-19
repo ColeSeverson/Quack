@@ -11,6 +11,7 @@ namespace TypeChecker {
     enum isInit {
       unseen, no, yes, unknown  
     };
+    //There isn't really a way to define which node a variable references, since it appears multiple times
     struct Var {
         std::string name;
         std::string type;
@@ -51,6 +52,7 @@ namespace TypeChecker {
         }
         return output;
     }
+    
     //At this point we only really care about the assignment, returns, typecase, or finding the type of the R_expr for the variable tables so we can do typing correctly
     std::map<std::string, struct Var *> * parseStatements(AST::Block *block) {
         std::map<std::string, struct Var *> *output = new std::map<std::string, struct Var *>();
@@ -108,7 +110,6 @@ namespace TypeChecker {
         output->node = clazz;
         output->name = clazz->getName()->getText();
         output->super = clazz->getSuper()->getText();
-
         //The statements associated with a class actually fall into the constructor technically
         output->constructor = createMethod(clazz->getConstructor());
 

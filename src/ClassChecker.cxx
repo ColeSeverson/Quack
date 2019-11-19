@@ -45,11 +45,22 @@ namespace ClassChecker {
 		AST::Program * root = dynamic_cast<AST::Program *>(root_);
 		//Here we will store information about classes we have seen
 		std::map<std::string, struct Clazz *> seenClasses;
+		//add the builtins
+		std::vector<struct Clazz *> *intChildren = new std::vector<struct Clazz *>();
+		struct Clazz Int = {"Int", "Obj", true, intChildren};
+		std::vector<struct Clazz *> *stringChildren = new std::vector<struct Clazz *>();
+		struct Clazz String = {"String", "Obj", true, stringChildren};
+		std::vector<struct Clazz *> *boolChildren = new std::vector<struct Clazz *>();
+		struct Clazz Bool = {"Bool", "Obj", true, boolChildren};
 		
 		//Create a Clazz to represent Obj
 		std::vector<struct Clazz *> * objChildren = new std::vector<struct Clazz *>();
 		struct Clazz Obj = {"Obj", "Obj", true, objChildren};
 		seenClasses.insert({"Obj", &Obj});
+		seenClasses.insert({"Int", &Int});
+		seenClasses.insert({"String", &String});
+		seenClasses.insert({"Bool", &Bool});
+
 
 		//std::cout << "Created the obj struct" << std::endl; 
 		AST::Classes astclasses = root->classes_;
@@ -115,7 +126,7 @@ namespace ClassChecker {
 		if(flag == true) {
 			exit(16);
 		}
-
+		printTree(&Obj, 0);
 		return 0;
 	}
 }
