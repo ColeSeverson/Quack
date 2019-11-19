@@ -1,0 +1,11 @@
+class A() {
+    def test() {
+
+    }
+    def haha() {
+
+    }
+    def test() {
+        
+    }
+}

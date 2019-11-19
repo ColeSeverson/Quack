@@ -16,7 +16,6 @@ class B(x: Int, y: String) extends A {
 }
 
 //now for some global statements
-2 + 3;
-a = 2 + 3;
-b : Int = a;
-c = b;
+a: Int = 3;
+b = "lmao";
+c: String = b;

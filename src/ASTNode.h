@@ -12,6 +12,18 @@
 namespace AST {
     // Abstract syntax tree.  ASTNode is abstract base class for all other nodes.
 
+    //Enums for keeping track of statement types;
+    enum statementEnum {
+        ASSIGN,
+        ASSIGNDECLARE,
+        EXPR,
+        RETURN,
+        IF,
+        WHILE,
+        LOAD,
+        OOF
+    };
+
     // Json conversion and pretty-printing can pass around a print context object
     // to keep track of indentation, and possibly other things.
     class AST_print_context {
@@ -97,7 +109,16 @@ namespace AST {
      * more complex, and typically in code generation we would have
      * LExpr evaluate to an address in a register.
      */
+    enum lexprTypes {
+        IDENT,
+        DOT,
+        NONE
+    };
     class LExpr : public ASTNode {
+        protected:
+            lexprTypes ltype = NONE;
+        public:
+            lexprTypes getType() {return this->ltype;};
         /* Abstract base class */
     };
 
@@ -111,7 +132,9 @@ namespace AST {
     class Ident : public LExpr {
         std::string text_;
     public:
-        explicit Ident(std::string txt) : text_{txt} {}
+        explicit Ident(std::string txt) : text_{txt} {
+            this->ltype = IDENT;
+        }
         void json(std::ostream& out, AST_print_context& ctx) override;
         std::string getText() {return this->text_;};
     };
@@ -159,7 +182,7 @@ namespace AST {
         Ident * getName() {return dynamic_cast<Ident *>(&name_);};
         Formals * getFormals() {return &this->formals_;};
         Ident * getReturnType() {return dynamic_cast<Ident *>(&returns_);};
-        Block * getStatments() {return &this->statements_;};
+        Block * getStatements() {return &this->statements_;};
     };
 
     class Methods : public Seq<Method> {
@@ -179,31 +202,47 @@ namespace AST {
      * puts it there.
      */
 
-    class Statement : public ASTNode { };
+    class Statement : public ASTNode { 
+        protected:
+            statementEnum type = OOF;
+        public:
+            statementEnum getType() {return this->type;};
+    };
 
+    /* A statement could be just an expression ... but
+     * we might want to interpose a node here.
+     */
+    class Expr : public Statement { 
+        protected:
+            statementEnum type = EXPR;
+    };
+    
     class Assign : public Statement {
     protected:  // But inherited by AssignDeclare
         ASTNode &lexpr_;
         ASTNode &rexpr_;
     public:
         explicit Assign(ASTNode &lexpr, ASTNode &rexpr) :
-           lexpr_{lexpr}, rexpr_{rexpr} {}
+           lexpr_{lexpr}, rexpr_{rexpr} {
+               this->type = ASSIGN;
+           }
         void json(std::ostream& out, AST_print_context& ctx) override;
+        LExpr * getLexpr() {return dynamic_cast<LExpr *>(&this->lexpr_);};
+        Expr * getExpr() {return dynamic_cast<Expr *>(&this->rexpr_);};
     };
 
     class AssignDeclare : public Assign {
         Ident &static_type_;
     public:
         explicit AssignDeclare(ASTNode &lexpr, ASTNode &rexpr, Ident &static_type) :
-            Assign(lexpr, rexpr), static_type_{static_type} {}
+            Assign(lexpr, rexpr), static_type_{static_type} {
+                this->type = ASSIGNDECLARE;
+            }
         void json(std::ostream& out, AST_print_context& ctx) override;
+        Ident * getStaticType() {return &this->static_type_;};
 
     };
 
-    /* A statement could be just an expression ... but
-     * we might want to interpose a node here.
-     */
-    class Expr : public Statement { };
 
     /* When an expression is an LExpr, we
      * the LExpr denotes a location, and we
@@ -212,8 +251,11 @@ namespace AST {
     class Load : public Expr {
         LExpr &loc_;
     public:
-        Load(LExpr &loc) : loc_{loc} {}
+        Load(LExpr &loc) : loc_{loc} {
+            this->type = LOAD;
+        }
         void json(std::ostream &out, AST_print_context &ctx) override;
+        LExpr * getLocation() {return &this->loc_;};
     };
 
 
@@ -222,8 +264,11 @@ namespace AST {
     class Return : public Statement {
         ASTNode &expr_;
     public:
-        explicit Return(ASTNode& expr) : expr_{expr}  {}
+        explicit Return(ASTNode& expr) : expr_{expr}  {
+            this->type = RETURN;
+        }
         void json(std::ostream& out, AST_print_context& ctx) override;
+        Expr * getExpr() {return dynamic_cast<Expr *>(&this->expr_);};
     };
 
     class If : public Statement {
@@ -232,8 +277,13 @@ namespace AST {
         Seq<ASTNode> &falsepart_; // Execute this block if the condition is false
     public:
         explicit If(ASTNode& cond, Seq<ASTNode>& truepart, Seq<ASTNode>& falsepart) :
-            cond_{cond}, truepart_{truepart}, falsepart_{falsepart} { };
+            cond_{cond}, truepart_{truepart}, falsepart_{falsepart} {
+                this->type = IF;
+             };
         void json(std::ostream& out, AST_print_context& ctx) override;
+        Expr * getCondition() {return dynamic_cast<Expr *>(&this->cond_);};
+        Seq<ASTNode> * getTrueBlock() {return &this->truepart_;};
+        Seq<ASTNode> * getFalseBlock() {return &this->falsepart_;};
     };
 
     class While : public Statement {
@@ -241,9 +291,12 @@ namespace AST {
         Seq<ASTNode>&  body_;     // Loop body
     public:
         explicit While(ASTNode& cond, Block& body) :
-            cond_{cond}, body_{body} { };
+            cond_{cond}, body_{body} { 
+                this->type = WHILE;
+            };
         void json(std::ostream& out, AST_print_context& ctx) override;
-
+        Expr * getCondition() {return dynamic_cast<Expr *>(&this->cond_);};
+        Seq<ASTNode> * getBody() {return &this->body_;};
     };
 
 
@@ -266,6 +319,8 @@ namespace AST {
         void json(std::ostream& out, AST_print_context& ctx) override;
         Ident* getName() {return &this->name_;};
         Ident* getSuper() {return &this->super_;};
+        Method* getConstructor() {return dynamic_cast<Method *>(&this->constructor_);};
+        Methods* getMethods() {return &this->methods_;};
     };
 
     /* A Quack program begins with a sequence of zero or more
@@ -401,8 +456,12 @@ namespace AST {
         Ident& right_;
     public:
         explicit Dot (Expr& left, Ident& right) :
-           left_{left},  right_{right} {}
+           left_{left},  right_{right} {
+               this->ltype = DOT;
+           }
         void json(std::ostream& out, AST_print_context& ctx) override;
+        Expr * getLeft() {return &this->left_;};
+        Ident * getRight() {return &this->right_;};
     };
 
 

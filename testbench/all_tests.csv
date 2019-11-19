@@ -18,7 +18,7 @@ bad_typecase_invalid_type.qk,TYPE_INF
 bad_typecase_recast.qk,TYPE_INF
 circular_dependency.qk,CLASS_HIERARCHY
 duplicate_class.qk,CLASS_HIERARCHY
-duplicate_method.qk,PARSER
+duplicate_method.qk,CLASS_HIERARCHY
 good_typecase.qk,PASS
 hands.qk,TYPE_INF
 if_false_init.qk,INIT_BEFORE_USE
