@@ -4,7 +4,7 @@
 #include "ASTNode.h"
 
 namespace TypeChecker {
-    int CheckTypes(AST::ASTNode *root);
+    int Check(AST::ASTNode *root_);
 }
 
 #endif

@@ -138,6 +138,8 @@ namespace AST {
         explicit Formal(ASTNode& var, ASTNode& type_) :
             var_{var}, type_{type_} {};
         void json(std::ostream& out, AST_print_context&ctx) override;
+        ASTNode * getName() {return &this->var_;};
+        ASTNode * getType() {return &this->type_;};
     };
 
     class Formals : public Seq<Formal> {
@@ -154,6 +156,10 @@ namespace AST {
         explicit Method(ASTNode& name, Formals& formals, ASTNode& returns, Block& statements) :
           name_{name}, formals_{formals}, returns_{returns}, statements_{statements} {}
         void json(std::ostream& out, AST_print_context&ctx) override;
+        Ident * getName() {return dynamic_cast<Ident *>(&name_);};
+        Formals * getFormals() {return &this->formals_;};
+        Ident * getReturnType() {return dynamic_cast<Ident *>(&returns_);};
+        Block * getStatments() {return &this->statements_;};
     };
 
     class Methods : public Seq<Method> {

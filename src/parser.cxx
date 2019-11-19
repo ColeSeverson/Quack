@@ -76,14 +76,14 @@ int main(int argc, char **argv) {
 	        }
 
             //now for types
-            if (TypeChecker::CheckTypes(root) != 0) {
+            if (TypeChecker::Check(root) != 0) {
                 std::cout << "Failed the type checker terminating..." << std::endl;
                 exit(32);
             }
 	    //Print the json if all goes correctly
-	    //AST::AST_print_context context;
-        //root->json(std::cout, context);
-        //std::cout << std::endl;
+	    AST::AST_print_context context;
+        root->json(std::cout, context);
+        std::cout << std::endl;
         } else {
             std::cout << "No tree produced." << std::endl;
             if(!report::ok()) {

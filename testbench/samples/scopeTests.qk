@@ -1,0 +1,22 @@
+//Test some classes
+class A(x: Int, y: String) {
+    this.z = x;
+    a : String = y;
+    def test() : Int {
+        return this.z;
+    }
+}
+
+class B(x: Int, y: String) extends A {
+    this.z = x + x;
+    a : String = y;
+    def test() : Int {
+        return 8989;
+    }
+}
+
+//now for some global statements
+2 + 3;
+a = 2 + 3;
+b : Int = a;
+c = b;
