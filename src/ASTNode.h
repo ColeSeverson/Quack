@@ -21,6 +21,9 @@ namespace AST {
         IF,
         WHILE,
         LOAD,
+        INTCONST,
+        STRINGCONST,
+        CALL,
         OOF
     };
 
@@ -55,6 +58,8 @@ namespace AST {
     public:
         explicit Stub(std::string name) : name_{name} {}
         void json(std::ostream& out, AST_print_context& ctx) override;
+        //Shouldn't ever need this since it should error out before static semantics at this point
+        std::string getName() {return this->name_;};
     };
 
 
@@ -216,7 +221,7 @@ namespace AST {
         protected:
             statementEnum type = EXPR;
     };
-    
+
     class Assign : public Statement {
     protected:  // But inherited by AssignDeclare
         ASTNode &lexpr_;
@@ -334,8 +339,11 @@ namespace AST {
     class IntConst : public Expr {
         int value_;
     public:
-        explicit IntConst(int v) : value_{v} {}
+        explicit IntConst(int v) : value_{v} {
+            this->type = INTCONST;
+        }
         void json(std::ostream& out, AST_print_context& ctx) override;
+        int getValue() {return value_;};
     };
 
     class Type_Alternative : public ASTNode {
@@ -346,6 +354,9 @@ namespace AST {
         explicit Type_Alternative(Ident& ident, Ident& classname, Block& block) :
                 ident_{ident}, classname_{classname}, block_{block} {}
         void json(std::ostream& out, AST_print_context& ctx) override;
+        Ident * getIdent() {return &this->ident_;};
+        Ident * getClassName() {return &this->classname_;};
+        Block * getStatements() {return &this->block_;};
     };
 
     class Type_Alternatives : public Seq<Type_Alternative> {
@@ -360,14 +371,19 @@ namespace AST {
         explicit Typecase(Expr& expr, Type_Alternatives& cases) :
                 expr_{expr}, cases_{cases} {};
         void json(std::ostream& out, AST_print_context& ctx) override;
+        Expr * getExpression() {return &this->expr_;};
+        Type_Alternatives * getAlternatives() {return &this->cases_;};
     };
 
 
     class StrConst : public Expr {
         std::string value_;
     public:
-        explicit StrConst(std::string v) : value_{v} {}
+        explicit StrConst(std::string v) : value_{v} {
+            this->type = STRINGCONST;
+        }
         void json(std::ostream& out, AST_print_context& ctx) override;
+        std::string getValue(){return value_;};
     };
 
     class Actuals : public Seq<Expr> {
@@ -387,6 +403,8 @@ namespace AST {
         explicit Construct(Ident& method, Actuals& actuals) :
                 method_{method}, actuals_{actuals} {}
         void json(std::ostream& out, AST_print_context& ctx) override;
+        Ident * getName() {return &this->method_;};
+        Actuals * getArgs() {return &this->actuals_;};
     };
 
 
@@ -400,11 +418,17 @@ namespace AST {
         Actuals& actuals_;     /* List of actual arguments */
     public:
         explicit Call(Expr& receiver, Ident& method, Actuals& actuals) :
-                receiver_{receiver}, method_{method}, actuals_{actuals} {};
+                receiver_{receiver}, method_{method}, actuals_{actuals} {
+                    this->type = CALL;
+                };
         // Convenience factory for the special case of a method
         // created for a binary operator (+, -, etc).
         static Call* binop(std::string opname, Expr& receiver, Expr& arg);
         void json(std::ostream& out, AST_print_context& ctx) override;
+        Ident * getMethod(){return &this->method_;};
+        Actuals * getArgs(){return &this->actuals_;};
+        //This should be a class... right?
+        Expr * getReciever(){return &this->receiver_;};
     };
 
 
@@ -421,6 +445,9 @@ namespace AST {
                 opsym{sym}, left_{l}, right_{r} {};
     public:
         void json(std::ostream& out, AST_print_context& ctx) override;
+        std::string getSymbol() {return this->opsym;};
+        Expr * getLeft(){return dynamic_cast<Expr *>(&this->left_);};
+        Expr * getRight(){return dynamic_cast<Expr *>(&this->right_);};
     };
 
    class And : public BinOp {
@@ -441,6 +468,7 @@ namespace AST {
         explicit Not(ASTNode& left ):
             left_{left}  {}
         void json(std::ostream& out, AST_print_context& ctx) override;
+        Expr * getLeft(){return dynamic_cast<Expr *>(&this->left_);};
     };
 
 
