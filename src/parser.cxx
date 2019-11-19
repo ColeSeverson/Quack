@@ -7,6 +7,7 @@
 #include "ASTNode.h"
 #include "Messages.h"
 #include "ClassChecker.h"
+#include "TypeChecker.h"
 
 #include <iostream>
 #include <unistd.h>  // getopt is here
@@ -65,19 +66,29 @@ int main(int argc, char **argv) {
         if (debug) driver.debug();
         AST::ASTNode *root = driver.parse();
         if (root != nullptr) {
+            if(!report::ok()) {
+                exit(8);
+            }
             //Now we do the semantic checks 
-	    if (ClassChecker::CheckHierarchy(root) != 0) {
-	    	std::cout << "Class Hierarchy invalid terminating..." << std::endl;
-		    exit(1);
-	    }
+	        if (ClassChecker::CheckHierarchy(root) != 0) {
+	        	std::cout << "Class Hierarchy invalid terminating..." << std::endl;
+		        exit(16);
+	        }
+
+            //now for types
+            if (TypeChecker::CheckTypes(root) != 0) {
+                std::cout << "Failed the type checker terminating..." << std::endl;
+                exit(32);
+            }
 	    //Print the json if all goes correctly
 	    //AST::AST_print_context context;
         //root->json(std::cout, context);
         //std::cout << std::endl;
-
-
         } else {
             std::cout << "No tree produced." << std::endl;
+            if(!report::ok()) {
+                exit(8);
+            }
         }
     }
 

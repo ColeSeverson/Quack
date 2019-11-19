@@ -1,0 +1,9 @@
+class a() extends c {
+
+}
+class b() extends a {
+
+}
+class c() extends b {
+    
+}
