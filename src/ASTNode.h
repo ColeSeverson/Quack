@@ -324,7 +324,7 @@ namespace AST {
         void json(std::ostream& out, AST_print_context& ctx) override;
         Ident* getName() {return &this->name_;};
         Ident* getSuper() {return &this->super_;};
-        Method* getConstructor() {return dynamic_cast<Method *>(&this->constructor_);};
+        Construct* getConstructor() {return dynamic_cast<Construct *>(&this->constructor_);};
         Methods* getMethods() {return &this->methods_;};
     };
 

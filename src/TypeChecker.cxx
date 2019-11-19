@@ -28,7 +28,7 @@ namespace TypeChecker {
         AST::Class * node;
         std::string name;
         std::string super;
-        struct Method *constructor;
+        AST::Construct *constructor;
         std::map<std::string, struct Method *> *methods;
         std::map<std::string, struct Var *> *variables;
         std::map<std::string, struct Var *> *fields;
@@ -52,7 +52,7 @@ namespace TypeChecker {
         }
         return output;
     }
-    
+
     //At this point we only really care about the assignment, returns, typecase, or finding the type of the R_expr for the variable tables so we can do typing correctly
     std::map<std::string, struct Var *> * parseStatements(AST::Block *block) {
         std::map<std::string, struct Var *> *output = new std::map<std::string, struct Var *>();
@@ -87,6 +87,10 @@ namespace TypeChecker {
 
         return output;
     }
+    int parseConstructor(struct Class * clazz) {
+        AST::Construct *constructor = clazz->constructor;
+        return 0;
+    }
     struct Method * createMethod(AST::Method *method) {
         struct Method * output = new struct Method();
         output->name = method->getName()->getText();
@@ -111,7 +115,7 @@ namespace TypeChecker {
         output->name = clazz->getName()->getText();
         output->super = clazz->getSuper()->getText();
         //The statements associated with a class actually fall into the constructor technically
-        output->constructor = createMethod(clazz->getConstructor());
+        output->constructor = clazz->getConstructor();
 
         std::map<std::string, struct Method *> *methods = new std::map<std::string, struct Method *>();
         for(auto method : clazz->getMethods()->getElements()) {
@@ -123,7 +127,7 @@ namespace TypeChecker {
             methods->insert({method->getName()->getText(), createMethod(method)});
         }
         //for the fun of it lets insert the constructor into the methods list too
-        methods->insert({clazz->getConstructor()->getName()->getText(), createMethod(clazz->getConstructor())});
+        //methods->insert({clazz->getConstructor()->getName()->getText(), createMethod(clazz->getConstructor())});
         output->methods = methods;
         return output;
     }
