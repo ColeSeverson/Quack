@@ -85,7 +85,7 @@ namespace AST {
      }
 
     void AssignDeclare::json(std::ostream& out, AST_print_context& ctx) {
-        json_head("Assign", out, ctx);
+        json_head("AssignDeclare", out, ctx);
         json_child("lexpr_", lexpr_, out, ctx);
         json_child("rexpr_", rexpr_, out, ctx);
         json_child("static_type_", static_type_, out, ctx, ' ');

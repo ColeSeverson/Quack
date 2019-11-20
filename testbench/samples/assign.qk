@@ -1,0 +1,8 @@
+/*class a() {
+    this.b = "haha";
+    this.x: Int = 7;
+}*/
+
+x = 5;
+y = "test";
+y = "MEMERINO";

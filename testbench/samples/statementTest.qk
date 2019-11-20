@@ -1,6 +1,6 @@
-/*class A() {
+class A() {
     this.f = 5;
-}*/
+}
 
 a: Int = 4;
 //b = 5;

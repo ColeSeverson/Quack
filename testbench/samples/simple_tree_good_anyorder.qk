@@ -1,3 +1,10 @@
 //Classes may be defined in any order 
-class Foo() extends Bar { }
-class Bar() { }
+class Foo(a: Int, b: String) extends Bar { }
+class Bar(c: Boolean) { 
+
+    def test(x: Int) {
+        
+    }
+}
+class Car() extends Bar { }
+class C() {}

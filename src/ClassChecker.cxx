@@ -126,7 +126,7 @@ namespace ClassChecker {
 		if(flag == true) {
 			exit(16);
 		}
-		printTree(&Obj, 0);
+		//printTree(&Obj, 0);
 		return 0;
 	}
 }

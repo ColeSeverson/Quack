@@ -157,7 +157,7 @@ classes:   /* empty */      {  $$ = new AST::Classes(); }
 
 class: CLASS ident '(' formals ')' opt_extends
      	'{' statements methods '}'
-	{ AST::ASTNode* constructor = new AST::Method(*$2, *$4, *$2, *$8);
+	{ AST::Method* constructor = new AST::Method(*$2, *$4, *$2, *$8);
 	  $$ = new AST::Class(*$2, *$6, *constructor, *$9);
 	}
 	;

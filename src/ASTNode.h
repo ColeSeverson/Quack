@@ -160,14 +160,14 @@ namespace AST {
      * identifier: type pairs.
      */
     class Formal : public ASTNode {
-        ASTNode& var_;
-        ASTNode& type_;
+        Ident& var_;
+        Ident& type_;
     public:
-        explicit Formal(ASTNode& var, ASTNode& type_) :
+        explicit Formal(Ident& var, Ident& type_) :
             var_{var}, type_{type_} {};
         void json(std::ostream& out, AST_print_context&ctx) override;
-        ASTNode * getName() {return &this->var_;};
-        ASTNode * getType() {return &this->type_;};
+        Ident * getName() {return &this->var_;};
+        Ident * getType() {return &this->type_;};
     };
 
     class Formals : public Seq<Formal> {
@@ -176,17 +176,17 @@ namespace AST {
     };
 
     class Method : public ASTNode {
-        ASTNode& name_;
+        Ident& name_;
         Formals& formals_;
-        ASTNode& returns_;
+        Ident& returns_;
         Block& statements_;
     public:
-        explicit Method(ASTNode& name, Formals& formals, ASTNode& returns, Block& statements) :
+        explicit Method(Ident& name, Formals& formals, Ident& returns, Block& statements) :
           name_{name}, formals_{formals}, returns_{returns}, statements_{statements} {}
         void json(std::ostream& out, AST_print_context&ctx) override;
-        Ident * getName() {return dynamic_cast<Ident *>(&name_);};
+        Ident * getName() {return &this->name_;};
         Formals * getFormals() {return &this->formals_;};
-        Ident * getReturnType() {return dynamic_cast<Ident *>(&returns_);};
+        Ident * getReturnType() {return &this->returns_;};
         Block * getStatements() {return &this->statements_;};
     };
 
@@ -218,8 +218,10 @@ namespace AST {
      * we might want to interpose a node here.
      */
     class Expr : public Statement { 
-        protected:
-            statementEnum type = EXPR;
+        public:
+            explicit Expr() {
+                type = EXPR;
+            }
     };
 
     class Assign : public Statement {
@@ -233,18 +235,23 @@ namespace AST {
            }
         void json(std::ostream& out, AST_print_context& ctx) override;
         LExpr * getLexpr() {return dynamic_cast<LExpr *>(&this->lexpr_);};
-        Expr * getExpr() {return dynamic_cast<Expr *>(&this->rexpr_);};
+        Statement * getExpr() {return dynamic_cast<Statement *>(&this->rexpr_);};
     };
 
-    class AssignDeclare : public Assign {
+    class AssignDeclare : public Statement {
+    protected:
         Ident &static_type_;
+        ASTNode &lexpr_;
+        ASTNode &rexpr_;
     public:
         explicit AssignDeclare(ASTNode &lexpr, ASTNode &rexpr, Ident &static_type) :
-            Assign(lexpr, rexpr), static_type_{static_type} {
+             lexpr_{lexpr}, rexpr_{rexpr}, static_type_{static_type} {
                 this->type = ASSIGNDECLARE;
             }
         void json(std::ostream& out, AST_print_context& ctx) override;
         Ident * getStaticType() {return &this->static_type_;};
+        LExpr * getLexpr() {return dynamic_cast<LExpr *>(&this->lexpr_);};
+        Statement * getExpr() {return dynamic_cast<Statement *>(&this->rexpr_);};
 
     };
 
@@ -314,17 +321,17 @@ namespace AST {
     class Class : public ASTNode {
         Ident& name_;
         Ident& super_;
-        ASTNode& constructor_;
+        Method& constructor_;
         Methods& methods_;
     public:
         explicit Class(Ident& name, Ident& super,
-                 ASTNode& constructor, Methods& methods) :
+                 Method& constructor, Methods& methods) :
             name_{name},  super_{super},
             constructor_{constructor}, methods_{methods} {};
         void json(std::ostream& out, AST_print_context& ctx) override;
         Ident* getName() {return &this->name_;};
         Ident* getSuper() {return &this->super_;};
-        Construct* getConstructor() {return dynamic_cast<Construct *>(&this->constructor_);};
+        Method* getConstructor() {return &this->constructor_;};
         Methods* getMethods() {return &this->methods_;};
     };
 
