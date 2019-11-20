@@ -152,6 +152,7 @@ namespace TypeChecker {
         }
     }
 
+    std::string parseExpr(struct Class * clazz, struct Method * method, AST::Statement * stat);
     //this returns a 'location'
     struct Var * processLexpr(struct Class * clazz, struct Method * method, AST::LExpr * lExpr) {
         if(lExpr->getType() == AST::lexprTypes::IDENT) {
@@ -176,37 +177,45 @@ namespace TypeChecker {
             std::cout << "Found Dot assign" << std::endl;
             std::string name = dot->getRight()->getText();
             //now we need to resolve the location
-            struct Var * location = parseExpr(clazz, method, dot->getLeft());
+            std::string object = parseExpr(clazz, method, dot->getLeft());
             //This should result in a var that represents the classname of something
-            
+            //lookup the object in the classes table
+            std::map<std::string, struct Class *>::iterator it = classes.find(object);
+            if(it == classes.end()) {
+                report::error("Class " + object + " is not valid");
+                exit(16);
+            } else {
+                std::map<std::string, struct Var *>::iterator it2 = it->second->fields->find(name);
+                if(it2 == it->second->fields->end()) {
+                    report::error("Class " + it->second->name + " doesnt contain field " + name);
+                    exit(32);
+                } else {
+                    return it2->second;
+                }
+            }
 
         }
         return 0;
     }
     //END HELPER METHODS TO BE REMOVED
     //This is run in the methods to parse the statments. It also acts as type inference. Needs reference to method, class, and statemtn
-    struct Var * parseExpr(struct Class * clazz, struct Method * method, AST::Statement * stat) {
+    std::string parseExpr(struct Class * clazz, struct Method * method, AST::Statement * stat) {
         std::cout << "Entering the parsing statments method" << std::endl;
         //we will have a seperate case for ASSIGN,ASSIGNDECLARE,EXPR,RETURN,IF,WHILE,LOAD,INTCONST,STRINGCONST,CALL,OOF
         if(stat->getType() == AST::statementEnum::INTCONST) {
-            std::cout << "Found an Int constant" << std::endl;
-            struct Var * output = new struct Var();
-            output->type = "Int";
-            output->name = "Nothing";
-            return output;
+            
+            return "Int";
         }else if(stat->getType() == AST::statementEnum::STRINGCONST) {
             std::cout << "Found an String constant" << std::endl;
-            struct Var * output = new struct Var();
-            output->type = "Str";
-            output->name = "Nothing";
-            return output;
+
+            return "String";
         }else if(stat->getType() == AST::statementEnum::ASSIGN) {
             std::cout << "Found an Assign!" << std::endl;
             //ASSIGN is the most basic case. The left side variable gets the type of the right side. Lexpr can be either a local variable or a field
             //First we get the type from the rexpr
             //Then we resolve the location and name of the lexpr and assign it the type
             AST::Assign *assi = dynamic_cast<AST::Assign *>(stat); 
-            std::string type = parseExpr(clazz, method, assi->getExpr())->type;
+            std::string type = parseExpr(clazz, method, assi->getExpr());
             struct Var * location = processLexpr(clazz, method, assi->getLexpr());
 
             if(location->init == no) {
@@ -219,14 +228,47 @@ namespace TypeChecker {
                 } //we dont need to do anything else right now since it is already the right type
             }
 
-            return NULL;
+            return "Nothing";
+        }else if(stat->getType() == AST::statementEnum::ASSIGNDECLARE) {
+            std::cout << "Found an AssignDeclare!" << std::endl;
+            //ASSIGN is the most basic case. The left side variable gets the type of the right side. Lexpr can be either a local variable or a field
+            //First we get the type from the rexpr
+            //Then we resolve the location and name of the lexpr and assign it the type
+            AST::AssignDeclare *assi = dynamic_cast<AST::AssignDeclare *>(stat); 
+            std::string type = parseExpr(clazz, method, assi->getExpr());
+            struct Var * location = processLexpr(clazz, method, assi->getLexpr());
+
+            if(assi->getStaticType()->getText().compare(type) != 0) {
+                report::error("Right side of assignment does not evauluate to the static type for " + location->name);
+                exit(64);
+            }
+
+            if(location->init == no) {
+                location->type = type;
+                location->init = yes;
+            }else if (location->init == yes) {
+                if (location->type.compare(type) != 0) {
+                    report::error("Type mismatch variable " + location->name + " has type " + location->type + " so you cannot assign a " + type);
+                    exit(64);
+                } //we dont need to do anything else right now since it is already the right type
+            }
+
+            return "Nothing";
+        }else if(stat->getType() == AST::statementEnum::LOAD) {
+            std::cout << "Found an load!" << std::endl;
+            AST::Load * load = dynamic_cast<AST::Load *>(stat);
+
+            struct Var * location = processLexpr(clazz, method, load->getLocation());
+            std::string loc = location->name;
+
+
         }else if(stat->getType() == AST::statementEnum::EXPR) {
             std::cout << "Found an expression" << std::endl;
         }else if(stat->getType() == AST::statementEnum::OOF) {
             std::cout << "Found an oof" << std::endl;
-        }
+        } 
 
-        return NULL;
+        return "Nothing";
     }
 
     int parseMethod(struct Class * parent, struct Method * input) {
