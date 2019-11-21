@@ -159,6 +159,14 @@ namespace TypeChecker {
             std::cout << "Found lexpr" << std::endl;
 
             std::string name = ((AST::Ident *)lExpr)->getText();
+
+            if(name.compare("this") == 0) {
+                struct Var * output = new struct Var();
+                output->type = clazz->name;
+                output->name = clazz->name;
+                return output;
+            }
+
             //check if it already exists in table
             std::map<std::string, struct Var *>::iterator it = method->table->find(name);
             if (it == method->table->end()) {
@@ -187,6 +195,14 @@ namespace TypeChecker {
             } else {
                 std::map<std::string, struct Var *>::iterator it2 = it->second->fields->find(name);
                 if(it2 == it->second->fields->end()) {
+                    if(method == clazz->constructor) {
+                        struct Var * output = new struct Var();
+                        output->name = name;
+                        output->type = "";
+                        output->init = no;
+                        clazz->fields->insert({name, output});
+                        return output;
+                    }
                     report::error("Class " + it->second->name + " doesnt contain field " + name);
                     exit(32);
                 } else {
@@ -258,10 +274,9 @@ namespace TypeChecker {
             std::cout << "Found an load!" << std::endl;
             AST::Load * load = dynamic_cast<AST::Load *>(stat);
 
-            struct Var * location = processLexpr(clazz, method, load->getLocation());
-            std::string loc = location->name;
+            Var * value = processLexpr(clazz, method, load->getLocation());
 
-
+            return value->type;
         }else if(stat->getType() == AST::statementEnum::EXPR) {
             std::cout << "Found an expression" << std::endl;
         }else if(stat->getType() == AST::statementEnum::OOF) {
