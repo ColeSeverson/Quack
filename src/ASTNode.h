@@ -24,6 +24,10 @@ namespace AST {
         INTCONST,
         STRINGCONST,
         CALL,
+        AND,
+        OR,
+        NOT,
+        CONSTRUCT,
         OOF
     };
 
@@ -408,7 +412,9 @@ namespace AST {
         Actuals& actuals_;    /* Actual arguments to constructor */
     public:
         explicit Construct(Ident& method, Actuals& actuals) :
-                method_{method}, actuals_{actuals} {}
+                method_{method}, actuals_{actuals} {
+                    this->type = CONSTRUCT;
+                }
         void json(std::ostream& out, AST_print_context& ctx) override;
         Ident * getName() {return &this->method_;};
         Actuals * getArgs() {return &this->actuals_;};
@@ -460,20 +466,26 @@ namespace AST {
    class And : public BinOp {
    public:
        explicit And(ASTNode& left, ASTNode& right) :
-          BinOp("And", left, right) {}
+          BinOp("And", left, right) {
+              this->type = AND;
+          }
    };
 
     class Or : public BinOp {
     public:
         explicit Or(ASTNode& left, ASTNode& right) :
-                BinOp("Or", left, right) {}
+                BinOp("Or", left, right) {
+                    this->type = OR;
+                }
     };
 
     class Not : public Expr {
         ASTNode& left_;
     public:
         explicit Not(ASTNode& left ):
-            left_{left}  {}
+            left_{left}  {
+                this->type = NOT;
+            }
         void json(std::ostream& out, AST_print_context& ctx) override;
         Expr * getLeft(){return dynamic_cast<Expr *>(&this->left_);};
     };

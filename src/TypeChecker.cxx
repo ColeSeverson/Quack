@@ -131,7 +131,7 @@ namespace TypeChecker {
         std::string output = "{";
         for(const auto& pair : *variables) {
             struct Var * var = pair.second;
-            output = output + var->name + ":" + var->type + "  ";
+            output = output + var->name + ":" + var->type + "-" + var->init + " ";
         }
         return (output = output + "}");
     }
@@ -212,6 +212,36 @@ namespace TypeChecker {
 
         }
         return 0;
+    }
+
+    std::map<std::string, struct Var *> * intersect(std::map<std::string, struct Var *> * one, std::map<std::string, struct Var *> * two) {
+        std::map<std::string, struct Var *> *output = new std::map<std::string, struct Var *>();
+        for(const auto& pair : *one) {
+            struct Var * in = new struct Var();
+            in->name = pair.second->name;
+            in->type = pair.second->type;
+            in->init = unknown;
+            std::map<std::string, struct Var *>::iterator it = two->find(pair);
+            if(it != two->end()) {
+                in->init = yes;
+            }
+            output->insert(in);
+        }
+        for(const auto& pair : *two) {
+            //check if it already exists in the map
+            std::map<std::string, struct Var *>::iterator it2 = output->find(pair);
+            if(it2 != output->end()) {
+                it2->second->init = yes;
+                continue;
+            }
+            //otherwise it wasn't in both lists anyway
+            struct Var * in = new struct Var();
+            in->name = pair.second->name;
+            in->type = pair.second->type;
+            in->init = unknown;
+            output->insert(in);
+        }
+        return output;
     }
     //END HELPER METHODS TO BE REMOVED
     //This is run in the methods to parse the statments. It also acts as type inference. Needs reference to method, class, and statemtn
@@ -332,6 +362,39 @@ namespace TypeChecker {
                     }
                 }
             }
+        }else if (stat->getType() == AST::statementEnum::IF) {
+            std::cout << "Found If" << std::endl;
+            //first things first lets make two copies of the method->table
+            std::map<std::string, struct Var *> *ttrue = new std::map<std::string, struct Var *>(method->table);
+            std::map<std::string, struct Var *> *tfalse = new std::map<std::string, struct Var *>(method->table);
+
+            AST::If * ifstat = dynamic_cast<AST::If *>(stat);
+            //first we will swap in the true map and parse the true section
+            delete(method->table);
+            method->table = ttrue;
+            for(const auto& stat : ifstat->getTrueBlock()->getElements()) {
+                AST::Statement *expr = dynamic_cast<AST::Statement *>(stat);
+                parseExpr(clazz, method, expr);
+            }
+
+            method->table = tfalse;
+            if(ifstat->getFalseBlock()) {
+                for(const auto& stat : ifstat->getFalseBlock()->getElements()) {
+                    AST::Statement *expr = dynamic_cast<AST::Statement *>(stat);
+                    parseExpr(clazz, method, expr);
+                }
+            }
+            //Now we check intersection
+
+        }else if (stat->getType() == AST::statementEnum::WHILE) {
+            std::cout << "Found While" << std::endl;
+        }else if (stat->getType() == AST::statementEnum::AND) {
+            std::cout << "Foudn ANd" << std::endl;
+        }else if (stat->getType() == AST::statementEnum::OR) {
+            std::cout << "Found Or" << std::endl;
+        }else if (stat->getType() == AST::statementEnum::NOT) {
+            std::cout << "Found NOT" << std::endl;
+        
         }else if(stat->getType() == AST::statementEnum::EXPR) {
             std::cout << "Found an expression" << std::endl;
             report::error("This really shouldn't happen... ");
