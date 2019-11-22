@@ -1,7 +1,7 @@
 class Schroedinger(box: Int) {
     if box > 0 {
-       this.living = true; 
+       this.living = True; 
     } else {
-       this.living = false;
+       this.living = False;
     }
 }

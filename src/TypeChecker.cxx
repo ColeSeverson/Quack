@@ -52,6 +52,7 @@ namespace TypeChecker {
         output->name = method->getName()->getText();
         output->node = method;
 
+
         std::map<std::string, struct Var *> *variables = new std::map<std::string, struct Var *>();
         std::vector<Var *> *args = new std::vector<Var *>();
         for(auto argument : method->getFormals()->getElements()) {
@@ -106,11 +107,12 @@ namespace TypeChecker {
         output->fields = fields;
 
         std::map<std::string, struct Method *> *methods = new std::map<std::string, struct Method *>();
+        methods->insert({output->constructor->name, output->constructor});
         for(auto method : clazz->getMethods()->getElements()) {
             std::map<std::string, struct Method *>::iterator it = methods->find(method->getName()->getText());
             if(it != methods->end()) {
                 report::error("Duplicate method name of " + method->getName()->getText() + " in class " + output->name);
-                exit(16);
+                exit(8);
             }
             methods->insert({method->getName()->getText(), createMethod(method)});
         }
@@ -164,6 +166,20 @@ namespace TypeChecker {
                 struct Var * output = new struct Var();
                 output->type = clazz->name;
                 output->name = clazz->name;
+                output->init = yes;
+                return output;
+            }
+            if(name.compare("True") == 0 || name.compare("true") == 0) {
+                struct Var * output = new struct Var();
+                output->name = "True";
+                output->type = "Boolean";
+                output->init = yes;
+                return output;
+            }
+            if(name.compare("False") == 0 || name.compare("false") == 0) {
+                struct Var * output = new struct Var();
+                output->name = "False";
+                output->type = "Boolean";
                 output->init = yes;
                 return output;
             }
@@ -264,6 +280,12 @@ namespace TypeChecker {
             std::string type = parseExpr(clazz, method, assi->getExpr());
             struct Var * location = processLexpr(clazz, method, assi->getLexpr());
     
+            if(location->name.compare("True") == 0 || location->name.compare("true") == 0 ||
+                location->name.compare("False") == 0 || location->name.compare("false") == 0) {
+                    report::error("Cannot assign value to a constant");
+                    exit(8);
+                }
+
             std::map<std::string, struct Class *>::iterator it = classes.find(location->name);
             if(it != classes.end()) {
                 report::error("Variable cannot be named the same as a class");
@@ -292,6 +314,11 @@ namespace TypeChecker {
             std::string type = parseExpr(clazz, method, assi->getExpr());
             struct Var * location = processLexpr(clazz, method, assi->getLexpr());
             
+            if(location->name.compare("True") == 0 || location->name.compare("true") == 0 ||
+                location->name.compare("False") == 0 || location->name.compare("false") == 0) {
+                    report::error("Cannot assign value to a constant");
+                    exit(8);
+            }
             std::map<std::string, struct Class *>::iterator it = classes.find(location->name);
             if(it != classes.end()) {
                 report::error("Variable cannot be named the same as a class");
@@ -334,11 +361,11 @@ namespace TypeChecker {
 
            std::string type = parseExpr(clazz, method, toReturn->getExpr());
 
-            std::map<std::string, struct Class *>::iterator it = classes.find(type);
+            /*std::map<std::string, struct Class *>::iterator it = classes.find(type);
             if(it == classes.end()) {
                 report::error("Invalid return type");
                 exit(16);
-            }
+            }*/
 
             if(type.compare(method->returnType) != 0) {
                 report::error("Bad return type: " + type + " in method " + method->name + " should be a " + method->returnType);
@@ -381,6 +408,8 @@ namespace TypeChecker {
                     }
                 }
             }
+            struct Method * temp = classes[classname]->methods->at(call->getMethod()->getText());
+            return temp->returnType;
         }else if (stat->getType() == AST::statementEnum::IF) {
             std::cout << "Found If" << std::endl;
             //first things first lets make two copies of the method->table
@@ -479,7 +508,7 @@ namespace TypeChecker {
 
         std::string type = input->returnType;
         std::map<std::string, struct Class *>::iterator it = classes.find(type);
-        if(it == classes.end()) {
+        if(it == classes.end() && type.compare("None") != 0) {
             report::error("Invalid return type");
             exit(16);
         }
@@ -527,7 +556,7 @@ namespace TypeChecker {
                 int comp = compareVar(it->second, pair.second);
                 if(comp == -1) {
                     report::error("Type error in fields Class " + input->name + " and super " + input->super + " in variable " + pair.first);
-                    exit(16);
+                    exit(64);
                 }else if (comp == -2) {
                     report::error("Field " + pair.first + " in class " + input->name + " super " + input->super + " does not have the same initialization level");
                     exit(32);
@@ -557,6 +586,24 @@ namespace TypeChecker {
         Obj = {NULL, "Obj", "Nothing", NULL, new std::map<std::string, struct Method *>(), new std::map<std::string, struct Var *>()};
 
         std::map<std::string, struct Method *> * intMethods = new std::map<std::string, struct Method *>(); //TOADD METHODS
+        struct Method * intPlus = new struct Method();
+        intPlus->name="PLUS";
+        intPlus->returnType = "Int";
+        intPlus->arguments = new std::vector<struct Var *>();
+        struct Var * toAdd = new struct Var();
+        toAdd->type = "Int";
+        intPlus->arguments->push_back(toAdd);
+        struct Method * intTimes = new struct Method();
+        intTimes->name = "TIMES";
+        intTimes->returnType = "Int";
+        intTimes->arguments = intPlus->arguments;
+        intTimes->node = NULL;
+        intTimes->table = NULL;
+        intMethods->insert({"TIMES", intTimes});
+        //intPlus->arguments->push_back(new struct Var());
+        intPlus->node = NULL;
+        intPlus->table = NULL;
+        intMethods->insert({"PLUS", intPlus});
         Int = {NULL, "Int", "Obj", NULL, intMethods, NULL};
         std::map<std::string, struct Method *> * stringMethods = new std::map<std::string, struct Method *>();
         String = {NULL, "String", "Obj", NULL, stringMethods, NULL};
@@ -575,7 +622,7 @@ namespace TypeChecker {
             classes.insert({clazz->getName()->getText(), createClass(clazz)});
         }
 
-        //lets get the classes in topological order (sort of)
+        //lets get the classes in topological o/rder (sort of)
         //This algorithm is probably very inefficient for large numbers of strings but hey... Who's writing a 2000 class Quack program please don't test this with one Prof Young ;)
         std::vector<std::string> topo;
         topo.push_back(Obj.name);
