@@ -9,7 +9,7 @@ adv_constructor_init.qk,PASS
 bad_break.qk,PARSER
 bad_class.qk,PARSER
 bad_class_params.qk,PARSER
-bad_duplicate_class.qk,PARSER
+bad_duplicate_class.qk,CLASS_HIERARCHY
 bad_escape.qk,PARSER
 bad_init.qk,INIT_BEFORE_USE
 bad_method_field_duplicate.qk,INIT_BEFORE_USE
