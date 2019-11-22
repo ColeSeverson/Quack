@@ -2,4 +2,6 @@ class C1() {
     while True {
         this.X = 4;
     }
+
+    y = this.X;
 }

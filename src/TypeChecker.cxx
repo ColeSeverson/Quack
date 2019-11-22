@@ -131,7 +131,7 @@ namespace TypeChecker {
         std::string output = "{";
         for(const auto& pair : *variables) {
             struct Var * var = pair.second;
-            output = output + var->name + ":" + var->type + "-" + var->init + " ";
+            output = output + var->name + ":" + var->type;
         }
         return (output = output + "}");
     }
@@ -221,15 +221,15 @@ namespace TypeChecker {
             in->name = pair.second->name;
             in->type = pair.second->type;
             in->init = unknown;
-            std::map<std::string, struct Var *>::iterator it = two->find(pair);
+            std::map<std::string, struct Var *>::iterator it = two->find(pair.first);
             if(it != two->end()) {
                 in->init = yes;
             }
-            output->insert(in);
+            output->insert({in->name, in});
         }
         for(const auto& pair : *two) {
             //check if it already exists in the map
-            std::map<std::string, struct Var *>::iterator it2 = output->find(pair);
+            std::map<std::string, struct Var *>::iterator it2 = output->find(pair.first);
             if(it2 != output->end()) {
                 it2->second->init = yes;
                 continue;
@@ -239,7 +239,7 @@ namespace TypeChecker {
             in->name = pair.second->name;
             in->type = pair.second->type;
             in->init = unknown;
-            output->insert(in);
+            output->insert({in->name, in});
         }
         return output;
     }
@@ -263,6 +263,12 @@ namespace TypeChecker {
             AST::Assign *assi = dynamic_cast<AST::Assign *>(stat); 
             std::string type = parseExpr(clazz, method, assi->getExpr());
             struct Var * location = processLexpr(clazz, method, assi->getLexpr());
+    
+            std::map<std::string, struct Class *>::iterator it = classes.find(location->name);
+            if(it != classes.end()) {
+                report::error("Variable cannot be named the same as a class");
+                exit(32);
+            }
 
             if(location->init == no) {
                 location->type = type;
@@ -285,6 +291,12 @@ namespace TypeChecker {
             AST::AssignDeclare *assi = dynamic_cast<AST::AssignDeclare *>(stat); 
             std::string type = parseExpr(clazz, method, assi->getExpr());
             struct Var * location = processLexpr(clazz, method, assi->getLexpr());
+            
+            std::map<std::string, struct Class *>::iterator it = classes.find(location->name);
+            if(it != classes.end()) {
+                report::error("Variable cannot be named the same as a class");
+                exit(32);
+            }
 
             if(assi->getStaticType()->getText().compare(type) != 0) {
                 report::error("Right side of assignment does not evauluate to the static type for " + location->name);
@@ -321,6 +333,13 @@ namespace TypeChecker {
            AST::Return * toReturn = dynamic_cast<AST::Return *>(stat);
 
            std::string type = parseExpr(clazz, method, toReturn->getExpr());
+
+            std::map<std::string, struct Class *>::iterator it = classes.find(type);
+            if(it == classes.end()) {
+                report::error("Invalid return type");
+                exit(16);
+            }
+
             if(type.compare(method->returnType) != 0) {
                 report::error("Bad return type: " + type + " in method " + method->name + " should be a " + method->returnType);
                 exit(64);
@@ -365,8 +384,8 @@ namespace TypeChecker {
         }else if (stat->getType() == AST::statementEnum::IF) {
             std::cout << "Found If" << std::endl;
             //first things first lets make two copies of the method->table
-            std::map<std::string, struct Var *> *ttrue = new std::map<std::string, struct Var *>(method->table);
-            std::map<std::string, struct Var *> *tfalse = new std::map<std::string, struct Var *>(method->table);
+            std::map<std::string, struct Var *> *ttrue = new std::map<std::string, struct Var *>(*method->table);
+            std::map<std::string, struct Var *> *tfalse = new std::map<std::string, struct Var *>(*method->table);
 
             AST::If * ifstat = dynamic_cast<AST::If *>(stat);
             //first we will swap in the true map and parse the true section
@@ -385,15 +404,55 @@ namespace TypeChecker {
                 }
             }
             //Now we check intersection
+            method->table = intersect(tfalse, ttrue);
+            return "Nothing";
 
         }else if (stat->getType() == AST::statementEnum::WHILE) {
             std::cout << "Found While" << std::endl;
+            AST::While * whilestat = dynamic_cast<AST::While *>(stat);
+            std::map<std::string, struct Var *> *ttrue = new std::map<std::string, struct Var *>(*method->table);
+            auto temp = method->table;
+            method->table = ttrue;
+
+            for(auto expr : whilestat->getBody()->getElements()) {
+                AST::Statement * stat = dynamic_cast<AST::Statement *>(expr);
+                parseExpr(clazz, method, stat);
+            }
+            method->table = intersect(temp, method->table);
+            return "Nothing";            
+
         }else if (stat->getType() == AST::statementEnum::AND) {
             std::cout << "Foudn ANd" << std::endl;
+            AST::And * statand = dynamic_cast<AST::And *>(stat);
+            std::string one = parseExpr(clazz, method,statand->getLeft());
+            std::string two = parseExpr(clazz, method, statand->getRight());
+
+            if(one.compare("Boolean") != 0 || two.compare("Boolean") != 0){
+                report::error("One or more values in an AND are not booleans");
+                exit(64);
+            }
+
+            return "Boolean";
         }else if (stat->getType() == AST::statementEnum::OR) {
             std::cout << "Found Or" << std::endl;
+            AST::Or * statand = dynamic_cast<AST::Or *>(stat);
+            std::string one = parseExpr(clazz, method,statand->getLeft());
+            std::string two = parseExpr(clazz, method, statand->getRight());
+            
+            if(one.compare("Boolean") != 0 || two.compare("Boolean") != 0){
+                report::error("One or more values in an OR are not booleans");
+                exit(64);
+            }
+
+            return "Boolean";
         }else if (stat->getType() == AST::statementEnum::NOT) {
             std::cout << "Found NOT" << std::endl;
+            AST::Not * notstat = dynamic_cast<AST::Not *>(stat);
+            if(parseExpr(clazz, method, notstat).compare("Boolean") != 0) {
+                report::error("Non boolean value in not statemetn");
+                exit(64);
+            }
+            return "Boolean";
         
         }else if(stat->getType() == AST::statementEnum::EXPR) {
             std::cout << "Found an expression" << std::endl;
@@ -416,6 +475,13 @@ namespace TypeChecker {
         if(parent->name.compare(input->name) == 0) {
             //This is the constructor then
             constructor = true;
+        }
+
+        std::string type = input->returnType;
+        std::map<std::string, struct Class *>::iterator it = classes.find(type);
+        if(it == classes.end()) {
+            report::error("Invalid return type");
+            exit(16);
         }
         //Instantiate the arguments as variables
         for(auto arg : *input->arguments) {
@@ -538,7 +604,7 @@ namespace TypeChecker {
         for(auto name : topo) {
             struct Class * clazz = classes[name];
             if(clazz->name.compare("Obj") == 0 || clazz->name.compare("String") == 0 ||
-                clazz->name.compare("Int") == 0 || clazz->name.compare("Boolean") == 0) {
+                clazz->name.compare("Int") == 0 || clazz->name.compare("Boolean") == 0){
                     continue;
                 }
             parseClass(clazz);

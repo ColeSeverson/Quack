@@ -81,9 +81,9 @@ int main(int argc, char **argv) {
                 exit(32);
             }
 	    //Print the json if all goes correctly
-	    AST::AST_print_context context;
-        root->json(std::cout, context);
-        std::cout << std::endl;
+	    //AST::AST_print_context context;
+        //root->json(std::cout, context);
+        //std::cout << std::endl;
         } else {
             std::cout << "No tree produced." << std::endl;
             if(!report::ok()) {
