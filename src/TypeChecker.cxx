@@ -164,6 +164,7 @@ namespace TypeChecker {
                 struct Var * output = new struct Var();
                 output->type = clazz->name;
                 output->name = clazz->name;
+                output->init = yes;
                 return output;
             }
 
@@ -198,7 +199,6 @@ namespace TypeChecker {
                     if(method == clazz->constructor) {
                         struct Var * output = new struct Var();
                         output->name = name;
-                        output->type = "";
                         output->init = no;
                         clazz->fields->insert({name, output});
                         return output;
@@ -237,6 +237,7 @@ namespace TypeChecker {
             if(location->init == no) {
                 location->type = type;
                 location->init = yes;
+                std::cout << "Just initialized variable: " << location->name << "with enum value" << location->init << std::endl;
             }else if (location->init == yes) {
                 if (location->type.compare(type) != 0) {
                     report::error("Type mismatch variable " + location->name + " has type " + location->type + " so you cannot assign a " + type);
@@ -276,11 +277,20 @@ namespace TypeChecker {
 
             Var * value = processLexpr(clazz, method, load->getLocation());
 
+            std::cout << "Loaded var: " << value->name << ": " << value->type << " intialized: " << value->init << std::endl;
+            if(value->init != yes) {
+                report::error("Loading possible uninitialized variable: " + value->name);
+                exit(32);
+            }
+
             return value->type;
         }else if(stat->getType() == AST::statementEnum::EXPR) {
             std::cout << "Found an expression" << std::endl;
+            report::error("This really shouldn't happen... ");
+            exit(16);
         }else if(stat->getType() == AST::statementEnum::OOF) {
             std::cout << "Found an oof" << std::endl;
+            exit(256);
         } 
 
         return "Nothing";

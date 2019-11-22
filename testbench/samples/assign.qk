@@ -4,5 +4,4 @@ class a() {
 }
 
 x = 5;
-y = "test";
-y = "MEMERINO";
+y = x;
