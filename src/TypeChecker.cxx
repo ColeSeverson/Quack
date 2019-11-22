@@ -241,6 +241,7 @@ namespace TypeChecker {
             }else if (location->init == yes) {
                 if (location->type.compare(type) != 0) {
                     report::error("Type mismatch variable " + location->name + " has type " + location->type + " so you cannot assign a " + type);
+                    std::cout << "Class " << clazz->name << " Method" << method->name << " Variable: "<< location->name << ":" << location->type << std::endl;
                     exit(64);
                 } //we dont need to do anything else right now since it is already the right type
             }
@@ -266,6 +267,7 @@ namespace TypeChecker {
             }else if (location->init == yes) {
                 if (location->type.compare(type) != 0) {
                     report::error("Type mismatch variable " + location->name + " has type " + location->type + " so you cannot assign a " + type);
+                    std::cout << "Class " << clazz->name << " Method" << method->name << " Variable: "<< location->name << ":" << location->type << std::endl;
                     exit(64);
                 } //we dont need to do anything else right now since it is already the right type
             }
@@ -284,6 +286,52 @@ namespace TypeChecker {
             }
 
             return value->type;
+        }else if(stat->getType() == AST::statementEnum::RETURN) {
+           std::cout << "Found a return" << std::endl;
+           AST::Return * toReturn = dynamic_cast<AST::Return *>(stat);
+
+           std::string type = parseExpr(clazz, method, toReturn->getExpr());
+            if(type.compare(method->returnType) != 0) {
+                report::error("Bad return type: " + type + " in method " + method->name + " should be a " + method->returnType);
+                exit(64);
+            } else {
+                return type;
+            }
+        }else if(stat->getType() == AST::statementEnum::CALL) {
+            std::cout << "Found a call" << std::endl;
+            AST::Call * call = dynamic_cast<AST::Call *>(stat);
+            
+            //first lets make sure the class is good
+            std::string classname = parseExpr(clazz, method, call->getReciever()); 
+            std::map<std::string, struct Class *>::iterator it = classes.find(classname);
+            if(it == classes.end()) {
+                report::error("Invalid class " + classname);
+                exit(16);
+            } else {
+                //now that the class exists lets check the method and its args
+                std::string methodname = call->getMethod()->getText();
+                std::map<std::string, struct Method *>::iterator it2 = it->second->methods->find(methodname);
+                if(it2 == it->second->methods->end()) {
+                    report::error("Invalid method " + methodname + " in class " + classname);
+                    exit(16);
+                } else {
+                    //ok the class does have this method
+                    //lets check the arguments
+                    struct Method * called = it2->second;
+                    std::vector<AST::Expr *> args = call->getArgs()->getElements();
+                    if(args.size() != called->arguments->size()) {
+                        report::error("Invalid number of arguments for method " + called->name);
+                        exit(8);
+                    } else {
+                        for(int i = 0; i < called->arguments->size(); i++) {
+                            if(called->arguments->at(i)->type.compare(parseExpr(clazz, method, args.at(i))) != 0) {
+                                report::error("Invalid argument type in method " + called->name + " " + parseExpr(clazz, method, args.at(i)) + " instead of " + called->arguments->at(i)->type);
+                                exit(8);
+                            }
+                        }
+                    }
+                }
+            }
         }else if(stat->getType() == AST::statementEnum::EXPR) {
             std::cout << "Found an expression" << std::endl;
             report::error("This really shouldn't happen... ");
@@ -305,6 +353,11 @@ namespace TypeChecker {
         if(parent->name.compare(input->name) == 0) {
             //This is the constructor then
             constructor = true;
+        }
+        //Instantiate the arguments as variables
+        for(auto arg : *input->arguments) {
+            arg->init = yes;
+            input->table->insert({arg->name, arg});
         }
 
         //parse all of the statements
