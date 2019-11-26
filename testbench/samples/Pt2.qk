@@ -4,7 +4,6 @@
  class Pt(x: Int, y: Int) {
      this.x = x;
      this.y = y;
-     w = 5 * 2 + 7 / 2;
      z = this.x + this.y;
 
      /* Note type of this.x and this.y is
@@ -13,11 +12,11 @@
       * from every method to every other method.
       */
 
-     def _get_x(): Int {
+     def get_x(): Int {
      	 return this.x; 
      } 
 
-     def _get_y(): Int {
+     def get_y(): Int {
      	 return this.y;
      }
 

@@ -416,16 +416,23 @@ namespace TypeChecker {
             std::map<std::string, struct Var *> *ttrue = new std::map<std::string, struct Var *>(*method->table);
             std::map<std::string, struct Var *> *tfalse = new std::map<std::string, struct Var *>(*method->table);
 
+            std::map<std::string, struct Var *> *fieldstrue = new std::map<std::string, struct Var *>(*clazz->fields);
+            std::map<std::string, struct Var *> *fieldsfalse = new std::map<std::string, struct Var *>(*clazz->fields);
+            
+
             AST::If * ifstat = dynamic_cast<AST::If *>(stat);
             //first we will swap in the true map and parse the true section
             delete(method->table);
             method->table = ttrue;
+            delete(clazz->fields);
+            clazz->fields = fieldstrue;
             for(const auto& stat : ifstat->getTrueBlock()->getElements()) {
                 AST::Statement *expr = dynamic_cast<AST::Statement *>(stat);
                 parseExpr(clazz, method, expr);
             }
 
             method->table = tfalse;
+            clazz->fields = fieldsfalse;
             if(ifstat->getFalseBlock()) {
                 for(const auto& stat : ifstat->getFalseBlock()->getElements()) {
                     AST::Statement *expr = dynamic_cast<AST::Statement *>(stat);
@@ -434,20 +441,26 @@ namespace TypeChecker {
             }
             //Now we check intersection
             method->table = intersect(tfalse, ttrue);
+            clazz->fields = intersect(fieldstrue, fieldsfalse);
             return "Nothing";
 
         }else if (stat->getType() == AST::statementEnum::WHILE) {
             std::cout << "Found While" << std::endl;
             AST::While * whilestat = dynamic_cast<AST::While *>(stat);
             std::map<std::string, struct Var *> *ttrue = new std::map<std::string, struct Var *>(*method->table);
+            std::map<std::string, struct Var *> *fieldtrue = new std::map<std::string, struct Var *>(*clazz->fields);
+
             auto temp = method->table;
+            auto tempfields = clazz->fields;
             method->table = ttrue;
+            clazz->fields = fieldtrue;
 
             for(auto expr : whilestat->getBody()->getElements()) {
                 AST::Statement * stat = dynamic_cast<AST::Statement *>(expr);
                 parseExpr(clazz, method, stat);
             }
             method->table = intersect(temp, method->table);
+            clazz->fields = intersect(tempfields, fieldtrue);
             return "Nothing";            
 
         }else if (stat->getType() == AST::statementEnum::AND) {
@@ -504,6 +517,8 @@ namespace TypeChecker {
         if(parent->name.compare(input->name) == 0) {
             //This is the constructor then
             constructor = true;
+            input->returnType = parent->name;
+            std::cout << "Return type for constructor set to " << input->returnType << std::endl;
         }
 
         std::string type = input->returnType;
