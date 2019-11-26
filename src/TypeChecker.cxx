@@ -496,6 +496,21 @@ namespace TypeChecker {
             }
             return "Boolean";
         
+        }else if(stat->getType() == AST::statementEnum::CONSTRUCT) {
+            std::cout << Found a constructor call << std::endl;
+            //get the constructor from the classes table
+            AST::Construct * construct = dynamic_cast<AST::Construct *>(stat);
+
+            std::vector<struct Var *> actuals;
+            for(auto act : construct->getArgs()->getElements()) {
+                struct Var * var = new struct Var();
+                var->type = act->getType();
+                var->name = "";
+                actuals.insert(var);
+            }
+
+            //now lets check to make sure the method call lines up
+            
         }else if(stat->getType() == AST::statementEnum::EXPR) {
             std::cout << "Found an expression" << std::endl;
             report::error("This really shouldn't happen... ");
@@ -598,7 +613,8 @@ namespace TypeChecker {
         //caste the root
         AST::Program *root = dynamic_cast<AST::Program *>(root_);   
         //we need the base classes for Obj, Int, String, Bool as well as the base methods that these base classes have as well
-        Obj = {NULL, "Obj", "Nothing", NULL, new std::map<std::string, struct Method *>(), new std::map<std::string, struct Var *>()};
+        std::map<std::string, struct Method *> * objMethods = new std::map<std::string, struct Method *>(); //TOADD METHODS
+        Obj = {NULL, "Obj", "Nothing", NULL, objMethods, new std::map<std::string, struct Var *>()};
 
         std::map<std::string, struct Method *> * intMethods = new std::map<std::string, struct Method *>(); //TOADD METHODS
         struct Method * intPlus = new struct Method();

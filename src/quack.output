@@ -1,0 +1,2828 @@
+Terminals unused in grammar
+
+    '/'
+
+
+Grammar
+
+    0 $accept: pgm $end
+
+    1 pgm: classes statements
+
+    2 classes: %empty
+    3        | classes class
+
+    4 class: CLASS ident '(' formals ')' opt_extends '{' statements methods '}'
+
+    5 opt_extends: EXTENDS ident
+    6            | %empty
+    7            | error ident
+
+    8 formals: %empty
+    9        | formals formal
+
+   10 formal: ident ':' ident
+   11       | ',' ident ':' ident
+   12       | error ':' ident
+   13       | ident ':' error
+
+   14 methods: %empty
+   15        | methods method
+
+   16 method: DEF ident '(' formals ')' return_type statement_block
+   17       | DEF ident '(' formals ')' return_type '{' error '}'
+
+   18 return_type: ':' ident
+   19            | %empty
+   20            | error '{'
+
+   21 statements: statements statement
+   22           | %empty
+
+   23 statement_block: '{' statements '}'
+
+   24 statement: WHILE expr statement_block
+   25          | IF expr statement_block opt_elif_parts
+
+   26 opt_elif_parts: ELIF expr statement_block opt_elif_parts
+   27               | ELSE statement_block
+   28               | %empty
+
+   29 statement: l_expr '=' expr ';'
+   30          | l_expr ':' ident '=' expr ';'
+   31          | RETURN expr ';'
+   32          | RETURN ';'
+   33          | expr ';'
+   34          | typecase
+
+   35 typecase: TYPECASE expr '{' type_alternatives '}'
+
+   36 type_alternatives: %empty
+   37                  | type_alternatives type_alternative
+
+   38 type_alternative: ident ':' ident statement_block
+
+   39 l_expr: IDENT
+   40       | expr '.' ident
+
+   41 expr: '(' expr ')'
+   42     | l_expr
+   43     | STRING_LIT
+   44     | INT_LIT
+   45     | expr '*' expr
+   46     | expr '+' expr
+   47     | expr '-' expr
+   48     | '-' expr
+   49     | expr EQUALS expr
+   50     | expr ATMOST expr
+   51     | expr ATLEAST expr
+   52     | expr '<' expr
+   53     | expr '>' expr
+   54     | expr AND expr
+   55     | expr OR expr
+   56     | NOT expr
+   57     | expr '.' ident '(' actual_args ')'
+
+   58 actual_args: %empty
+   59            | actual_args_nonempty
+
+   60 actual_args_nonempty: actual_args_nonempty ',' expr
+   61                     | expr
+
+   62 expr: ident '(' actual_args ')'
+
+   63 ident: IDENT
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    '(' (40) 4 16 17 41 57 62
+    ')' (41) 4 16 17 41 57 62
+    '*' (42) 45
+    '+' (43) 46
+    ',' (44) 11 60
+    '-' (45) 47 48
+    '.' (46) 40 57
+    '/' (47)
+    ':' (58) 10 11 12 13 18 30 38
+    ';' (59) 29 30 31 32 33
+    '<' (60) 52
+    '=' (61) 29 30
+    '>' (62) 53
+    '{' (123) 4 17 20 23 35
+    '}' (125) 4 17 23 35
+    error (256) 7 12 13 17 20
+    CLASS (258) 4
+    DEF (259) 16 17
+    EXTENDS (260) 5
+    IF (261) 25
+    ELIF (262) 26
+    ELSE (263) 27
+    WHILE (264) 24
+    RETURN (265) 31 32
+    TYPECASE (266) 35
+    ATLEAST (267) 51
+    ATMOST (268) 50
+    EQUALS (269) 49
+    AND (270) 54
+    OR (271) 55
+    NOT (272) 56
+    IDENT <str> (273) 39 63
+    INT_LIT <num> (274) 44
+    STRING_LIT <str> (275) 43
+    NEG (276)
+
+
+Nonterminals, with rules where they appear
+
+    $accept (37)
+        on left: 0
+    pgm <node> (38)
+        on left: 1
+        on right: 0
+    classes <classes> (39)
+        on left: 2 3
+        on right: 1 3
+    class <klass> (40)
+        on left: 4
+        on right: 3
+    opt_extends <ident> (41)
+        on left: 5 6 7
+        on right: 4
+    formals <formals> (42)
+        on left: 8 9
+        on right: 4 9 16 17
+    formal <formal> (43)
+        on left: 10 11 12 13
+        on right: 9
+    methods <methods> (44)
+        on left: 14 15
+        on right: 4 15
+    method <method> (45)
+        on left: 16 17
+        on right: 15
+    return_type <ident> (46)
+        on left: 18 19 20
+        on right: 16 17
+    statements <block> (47)
+        on left: 21 22
+        on right: 1 4 21 23
+    statement_block <block> (48)
+        on left: 23
+        on right: 16 24 25 26 27 38
+    statement <statement> (49)
+        on left: 24 25 29 30 31 32 33 34
+        on right: 21
+    opt_elif_parts <block> (50)
+        on left: 26 27 28
+        on right: 25 26
+    typecase <typecase> (51)
+        on left: 35
+        on right: 34
+    type_alternatives <type_alternatives> (52)
+        on left: 36 37
+        on right: 35 37
+    type_alternative <type_alternative> (53)
+        on left: 38
+        on right: 37
+    l_expr <l_expr> (54)
+        on left: 39 40
+        on right: 29 30 42
+    expr <expr> (55)
+        on left: 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 62
+        on right: 24 25 26 29 30 31 33 35 40 41 45 46 47 48 49 50 51 52 53 54 55 56 57 60 61
+    actual_args <actuals> (56)
+        on left: 58 59
+        on right: 57 62
+    actual_args_nonempty <actuals> (57)
+        on left: 60 61
+        on right: 59 60
+    ident <ident> (58)
+        on left: 63
+        on right: 4 5 7 10 11 12 13 16 17 18 30 38 40 57 62
+
+
+State 0
+
+    0 $accept: . pgm $end
+    1 pgm: . classes statements
+    2 classes: . %empty
+    3        | . classes class
+
+    $default  reduce using rule 2 (classes)
+
+    pgm      go to state 1
+    classes  go to state 2
+
+
+State 1
+
+    0 $accept: pgm . $end
+
+    $end  shift, and go to state 3
+
+
+State 2
+
+    1 pgm: classes . statements
+    3 classes: classes . class
+    4 class: . CLASS ident '(' formals ')' opt_extends '{' statements methods '}'
+   21 statements: . statements statement
+   22           | . %empty  [$end, IF, WHILE, RETURN, TYPECASE, NOT, IDENT, INT_LIT, STRING_LIT, '-', '(']
+
+    CLASS  shift, and go to state 4
+
+    $default  reduce using rule 22 (statements)
+
+    class       go to state 5
+    statements  go to state 6
+
+
+State 3
+
+    0 $accept: pgm $end .
+
+    $default  accept
+
+
+State 4
+
+    4 class: CLASS . ident '(' formals ')' opt_extends '{' statements methods '}'
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+
+    ident  go to state 8
+
+
+State 5
+
+    3 classes: classes class .
+
+    $default  reduce using rule 3 (classes)
+
+
+State 6
+
+    1 pgm: classes statements .  [$end]
+   21 statements: statements . statement
+   24 statement: . WHILE expr statement_block
+   25          | . IF expr statement_block opt_elif_parts
+   29          | . l_expr '=' expr ';'
+   30          | . l_expr ':' ident '=' expr ';'
+   31          | . RETURN expr ';'
+   32          | . RETURN ';'
+   33          | . expr ';'
+   34          | . typecase
+   35 typecase: . TYPECASE expr '{' type_alternatives '}'
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    IF          shift, and go to state 9
+    WHILE       shift, and go to state 10
+    RETURN      shift, and go to state 11
+    TYPECASE    shift, and go to state 12
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    $default  reduce using rule 1 (pgm)
+
+    statement  go to state 19
+    typecase   go to state 20
+    l_expr     go to state 21
+    expr       go to state 22
+    ident      go to state 23
+
+
+State 7
+
+   63 ident: IDENT .
+
+    $default  reduce using rule 63 (ident)
+
+
+State 8
+
+    4 class: CLASS ident . '(' formals ')' opt_extends '{' statements methods '}'
+
+    '('  shift, and go to state 24
+
+
+State 9
+
+   25 statement: IF . expr statement_block opt_elif_parts
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 26
+    ident   go to state 23
+
+
+State 10
+
+   24 statement: WHILE . expr statement_block
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 27
+    ident   go to state 23
+
+
+State 11
+
+   31 statement: RETURN . expr ';'
+   32          | RETURN . ';'
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+    ';'         shift, and go to state 28
+
+    l_expr  go to state 25
+    expr    go to state 29
+    ident   go to state 23
+
+
+State 12
+
+   35 typecase: TYPECASE . expr '{' type_alternatives '}'
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 30
+    ident   go to state 23
+
+
+State 13
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   56     | NOT . expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 31
+    ident   go to state 23
+
+
+State 14
+
+   39 l_expr: IDENT .  [ATLEAST, ATMOST, EQUALS, AND, OR, '>', '<', '+', '-', '*', '.', ')', '{', ':', ',', '=', ';']
+   63 ident: IDENT .  ['(']
+
+    '('       reduce using rule 63 (ident)
+    $default  reduce using rule 39 (l_expr)
+
+
+State 15
+
+   44 expr: INT_LIT .
+
+    $default  reduce using rule 44 (expr)
+
+
+State 16
+
+   43 expr: STRING_LIT .
+
+    $default  reduce using rule 43 (expr)
+
+
+State 17
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   48     | '-' . expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 32
+    ident   go to state 23
+
+
+State 18
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   41     | '(' . expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 33
+    ident   go to state 23
+
+
+State 19
+
+   21 statements: statements statement .
+
+    $default  reduce using rule 21 (statements)
+
+
+State 20
+
+   34 statement: typecase .
+
+    $default  reduce using rule 34 (statement)
+
+
+State 21
+
+   29 statement: l_expr . '=' expr ';'
+   30          | l_expr . ':' ident '=' expr ';'
+   42 expr: l_expr .  [ATLEAST, ATMOST, EQUALS, AND, OR, '>', '<', '+', '-', '*', '.', ';']
+
+    ':'  shift, and go to state 34
+    '='  shift, and go to state 35
+
+    $default  reduce using rule 42 (expr)
+
+
+State 22
+
+   33 statement: expr . ';'
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    AND      shift, and go to state 39
+    OR       shift, and go to state 40
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+    ';'      shift, and go to state 47
+
+
+State 23
+
+   62 expr: ident . '(' actual_args ')'
+
+    '('  shift, and go to state 48
+
+
+State 24
+
+    4 class: CLASS ident '(' . formals ')' opt_extends '{' statements methods '}'
+    8 formals: . %empty
+    9        | . formals formal
+
+    $default  reduce using rule 8 (formals)
+
+    formals  go to state 49
+
+
+State 25
+
+   42 expr: l_expr .
+
+    $default  reduce using rule 42 (expr)
+
+
+State 26
+
+   23 statement_block: . '{' statements '}'
+   25 statement: IF expr . statement_block opt_elif_parts
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    AND      shift, and go to state 39
+    OR       shift, and go to state 40
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+    '{'      shift, and go to state 50
+
+    statement_block  go to state 51
+
+
+State 27
+
+   23 statement_block: . '{' statements '}'
+   24 statement: WHILE expr . statement_block
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    AND      shift, and go to state 39
+    OR       shift, and go to state 40
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+    '{'      shift, and go to state 50
+
+    statement_block  go to state 52
+
+
+State 28
+
+   32 statement: RETURN ';' .
+
+    $default  reduce using rule 32 (statement)
+
+
+State 29
+
+   31 statement: RETURN expr . ';'
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    AND      shift, and go to state 39
+    OR       shift, and go to state 40
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+    ';'      shift, and go to state 53
+
+
+State 30
+
+   35 typecase: TYPECASE expr . '{' type_alternatives '}'
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    AND      shift, and go to state 39
+    OR       shift, and go to state 40
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+    '{'      shift, and go to state 54
+
+
+State 31
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   56     | NOT expr .  [AND, OR, ')', '{', ',', ';']
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+
+    $default  reduce using rule 56 (expr)
+
+    Conflict between rule 56 and token ATLEAST resolved as shift (NOT < ATLEAST).
+    Conflict between rule 56 and token ATMOST resolved as shift (NOT < ATMOST).
+    Conflict between rule 56 and token EQUALS resolved as shift (NOT < EQUALS).
+    Conflict between rule 56 and token AND resolved as reduce (AND < NOT).
+    Conflict between rule 56 and token OR resolved as reduce (OR < NOT).
+    Conflict between rule 56 and token '>' resolved as shift (NOT < '>').
+    Conflict between rule 56 and token '<' resolved as shift (NOT < '<').
+    Conflict between rule 56 and token '+' resolved as shift (NOT < '+').
+    Conflict between rule 56 and token '-' resolved as shift (NOT < '-').
+    Conflict between rule 56 and token '*' resolved as shift (NOT < '*').
+    Conflict between rule 56 and token '.' resolved as shift (NOT < '.').
+
+
+State 32
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   48     | '-' expr .  [ATLEAST, ATMOST, EQUALS, AND, OR, '>', '<', '+', '-', '*', ')', '{', ',', ';']
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    '.'  shift, and go to state 46
+
+    $default  reduce using rule 48 (expr)
+
+    Conflict between rule 48 and token ATLEAST resolved as reduce (ATLEAST < NEG).
+    Conflict between rule 48 and token ATMOST resolved as reduce (ATMOST < NEG).
+    Conflict between rule 48 and token EQUALS resolved as reduce (EQUALS < NEG).
+    Conflict between rule 48 and token AND resolved as reduce (AND < NEG).
+    Conflict between rule 48 and token OR resolved as reduce (OR < NEG).
+    Conflict between rule 48 and token '>' resolved as reduce ('>' < NEG).
+    Conflict between rule 48 and token '<' resolved as reduce ('<' < NEG).
+    Conflict between rule 48 and token '+' resolved as reduce ('+' < NEG).
+    Conflict between rule 48 and token '-' resolved as reduce ('-' < NEG).
+    Conflict between rule 48 and token '*' resolved as reduce ('*' < NEG).
+    Conflict between rule 48 and token '.' resolved as shift (NEG < '.').
+
+
+State 33
+
+   40 l_expr: expr . '.' ident
+   41 expr: '(' expr . ')'
+   45     | expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    AND      shift, and go to state 39
+    OR       shift, and go to state 40
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+    ')'      shift, and go to state 55
+
+
+State 34
+
+   30 statement: l_expr ':' . ident '=' expr ';'
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+
+    ident  go to state 56
+
+
+State 35
+
+   29 statement: l_expr '=' . expr ';'
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 57
+    ident   go to state 23
+
+
+State 36
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   51     | expr ATLEAST . expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 58
+    ident   go to state 23
+
+
+State 37
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   50     | expr ATMOST . expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 59
+    ident   go to state 23
+
+
+State 38
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   49     | expr EQUALS . expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 60
+    ident   go to state 23
+
+
+State 39
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   54     | expr AND . expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 61
+    ident   go to state 23
+
+
+State 40
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   55     | expr OR . expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 62
+    ident   go to state 23
+
+
+State 41
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   53     | expr '>' . expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 63
+    ident   go to state 23
+
+
+State 42
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   52     | expr '<' . expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 64
+    ident   go to state 23
+
+
+State 43
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   46     | expr '+' . expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 65
+    ident   go to state 23
+
+
+State 44
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   47     | expr '-' . expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 66
+    ident   go to state 23
+
+
+State 45
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   45     | expr '*' . expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 67
+    ident   go to state 23
+
+
+State 46
+
+   40 l_expr: expr '.' . ident
+   57 expr: expr '.' . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+
+    ident  go to state 68
+
+
+State 47
+
+   33 statement: expr ';' .
+
+    $default  reduce using rule 33 (statement)
+
+
+State 48
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   58 actual_args: . %empty  [')']
+   59            | . actual_args_nonempty
+   60 actual_args_nonempty: . actual_args_nonempty ',' expr
+   61                     | . expr
+   62 expr: . ident '(' actual_args ')'
+   62     | ident '(' . actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    $default  reduce using rule 58 (actual_args)
+
+    l_expr                go to state 25
+    expr                  go to state 69
+    actual_args           go to state 70
+    actual_args_nonempty  go to state 71
+    ident                 go to state 23
+
+
+State 49
+
+    4 class: CLASS ident '(' formals . ')' opt_extends '{' statements methods '}'
+    9 formals: formals . formal
+   10 formal: . ident ':' ident
+   11       | . ',' ident ':' ident
+   12       | . error ':' ident
+   13       | . ident ':' error
+   63 ident: . IDENT
+
+    error  shift, and go to state 72
+    IDENT  shift, and go to state 7
+    ')'    shift, and go to state 73
+    ','    shift, and go to state 74
+
+    formal  go to state 75
+    ident   go to state 76
+
+
+State 50
+
+   21 statements: . statements statement
+   22           | . %empty
+   23 statement_block: '{' . statements '}'
+
+    $default  reduce using rule 22 (statements)
+
+    statements  go to state 77
+
+
+State 51
+
+   25 statement: IF expr statement_block . opt_elif_parts
+   26 opt_elif_parts: . ELIF expr statement_block opt_elif_parts
+   27               | . ELSE statement_block
+   28               | . %empty  [$end, DEF, IF, WHILE, RETURN, TYPECASE, NOT, IDENT, INT_LIT, STRING_LIT, '-', '(', '}']
+
+    ELIF  shift, and go to state 78
+    ELSE  shift, and go to state 79
+
+    $default  reduce using rule 28 (opt_elif_parts)
+
+    opt_elif_parts  go to state 80
+
+
+State 52
+
+   24 statement: WHILE expr statement_block .
+
+    $default  reduce using rule 24 (statement)
+
+
+State 53
+
+   31 statement: RETURN expr ';' .
+
+    $default  reduce using rule 31 (statement)
+
+
+State 54
+
+   35 typecase: TYPECASE expr '{' . type_alternatives '}'
+   36 type_alternatives: . %empty
+   37                  | . type_alternatives type_alternative
+
+    $default  reduce using rule 36 (type_alternatives)
+
+    type_alternatives  go to state 81
+
+
+State 55
+
+   41 expr: '(' expr ')' .
+
+    $default  reduce using rule 41 (expr)
+
+
+State 56
+
+   30 statement: l_expr ':' ident . '=' expr ';'
+
+    '='  shift, and go to state 82
+
+
+State 57
+
+   29 statement: l_expr '=' expr . ';'
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    AND      shift, and go to state 39
+    OR       shift, and go to state 40
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+    ';'      shift, and go to state 83
+
+
+State 58
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   51     | expr ATLEAST expr .  [ATMOST, AND, OR, '>', ')', '{', ',', ';']
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    EQUALS  shift, and go to state 38
+    '+'     shift, and go to state 43
+    '-'     shift, and go to state 44
+    '*'     shift, and go to state 45
+    '.'     shift, and go to state 46
+
+    ATLEAST  error (nonassociative)
+    '<'      error (nonassociative)
+
+    $default  reduce using rule 51 (expr)
+
+    Conflict between rule 51 and token ATLEAST resolved as an error (%nonassoc ATLEAST).
+    Conflict between rule 51 and token ATMOST resolved as reduce (ATMOST < ATLEAST).
+    Conflict between rule 51 and token EQUALS resolved as shift (ATLEAST < EQUALS).
+    Conflict between rule 51 and token AND resolved as reduce (AND < ATLEAST).
+    Conflict between rule 51 and token OR resolved as reduce (OR < ATLEAST).
+    Conflict between rule 51 and token '>' resolved as reduce ('>' < ATLEAST).
+    Conflict between rule 51 and token '<' resolved as an error (%nonassoc '<').
+    Conflict between rule 51 and token '+' resolved as shift (ATLEAST < '+').
+    Conflict between rule 51 and token '-' resolved as shift (ATLEAST < '-').
+    Conflict between rule 51 and token '*' resolved as shift (ATLEAST < '*').
+    Conflict between rule 51 and token '.' resolved as shift (ATLEAST < '.').
+
+
+State 59
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   50     | expr ATMOST expr .  [AND, OR, ')', '{', ',', ';']
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    EQUALS   shift, and go to state 38
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+
+    ATMOST  error (nonassociative)
+    '>'     error (nonassociative)
+
+    $default  reduce using rule 50 (expr)
+
+    Conflict between rule 50 and token ATLEAST resolved as shift (ATMOST < ATLEAST).
+    Conflict between rule 50 and token ATMOST resolved as an error (%nonassoc ATMOST).
+    Conflict between rule 50 and token EQUALS resolved as shift (ATMOST < EQUALS).
+    Conflict between rule 50 and token AND resolved as reduce (AND < ATMOST).
+    Conflict between rule 50 and token OR resolved as reduce (OR < ATMOST).
+    Conflict between rule 50 and token '>' resolved as an error (%nonassoc '>').
+    Conflict between rule 50 and token '<' resolved as shift (ATMOST < '<').
+    Conflict between rule 50 and token '+' resolved as shift (ATMOST < '+').
+    Conflict between rule 50 and token '-' resolved as shift (ATMOST < '-').
+    Conflict between rule 50 and token '*' resolved as shift (ATMOST < '*').
+    Conflict between rule 50 and token '.' resolved as shift (ATMOST < '.').
+
+
+State 60
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   49     | expr EQUALS expr .  [ATLEAST, ATMOST, EQUALS, AND, OR, '>', '<', ')', '{', ',', ';']
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    '+'  shift, and go to state 43
+    '-'  shift, and go to state 44
+    '*'  shift, and go to state 45
+    '.'  shift, and go to state 46
+
+    $default  reduce using rule 49 (expr)
+
+    Conflict between rule 49 and token ATLEAST resolved as reduce (ATLEAST < EQUALS).
+    Conflict between rule 49 and token ATMOST resolved as reduce (ATMOST < EQUALS).
+    Conflict between rule 49 and token EQUALS resolved as reduce (%left EQUALS).
+    Conflict between rule 49 and token AND resolved as reduce (AND < EQUALS).
+    Conflict between rule 49 and token OR resolved as reduce (OR < EQUALS).
+    Conflict between rule 49 and token '>' resolved as reduce ('>' < EQUALS).
+    Conflict between rule 49 and token '<' resolved as reduce ('<' < EQUALS).
+    Conflict between rule 49 and token '+' resolved as shift (EQUALS < '+').
+    Conflict between rule 49 and token '-' resolved as shift (EQUALS < '-').
+    Conflict between rule 49 and token '*' resolved as shift (EQUALS < '*').
+    Conflict between rule 49 and token '.' resolved as shift (EQUALS < '.').
+
+
+State 61
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   54     | expr AND expr .  [AND, OR, ')', '{', ',', ';']
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+
+    $default  reduce using rule 54 (expr)
+
+    Conflict between rule 54 and token ATLEAST resolved as shift (AND < ATLEAST).
+    Conflict between rule 54 and token ATMOST resolved as shift (AND < ATMOST).
+    Conflict between rule 54 and token EQUALS resolved as shift (AND < EQUALS).
+    Conflict between rule 54 and token AND resolved as reduce (%left AND).
+    Conflict between rule 54 and token OR resolved as reduce (%left OR).
+    Conflict between rule 54 and token '>' resolved as shift (AND < '>').
+    Conflict between rule 54 and token '<' resolved as shift (AND < '<').
+    Conflict between rule 54 and token '+' resolved as shift (AND < '+').
+    Conflict between rule 54 and token '-' resolved as shift (AND < '-').
+    Conflict between rule 54 and token '*' resolved as shift (AND < '*').
+    Conflict between rule 54 and token '.' resolved as shift (AND < '.').
+
+
+State 62
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   55     | expr OR expr .  [AND, OR, ')', '{', ',', ';']
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+
+    $default  reduce using rule 55 (expr)
+
+    Conflict between rule 55 and token ATLEAST resolved as shift (OR < ATLEAST).
+    Conflict between rule 55 and token ATMOST resolved as shift (OR < ATMOST).
+    Conflict between rule 55 and token EQUALS resolved as shift (OR < EQUALS).
+    Conflict between rule 55 and token AND resolved as reduce (%left AND).
+    Conflict between rule 55 and token OR resolved as reduce (%left OR).
+    Conflict between rule 55 and token '>' resolved as shift (OR < '>').
+    Conflict between rule 55 and token '<' resolved as shift (OR < '<').
+    Conflict between rule 55 and token '+' resolved as shift (OR < '+').
+    Conflict between rule 55 and token '-' resolved as shift (OR < '-').
+    Conflict between rule 55 and token '*' resolved as shift (OR < '*').
+    Conflict between rule 55 and token '.' resolved as shift (OR < '.').
+
+
+State 63
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   53     | expr '>' expr .  [AND, OR, ')', '{', ',', ';']
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    EQUALS   shift, and go to state 38
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+
+    ATMOST  error (nonassociative)
+    '>'     error (nonassociative)
+
+    $default  reduce using rule 53 (expr)
+
+    Conflict between rule 53 and token ATLEAST resolved as shift ('>' < ATLEAST).
+    Conflict between rule 53 and token ATMOST resolved as an error (%nonassoc ATMOST).
+    Conflict between rule 53 and token EQUALS resolved as shift ('>' < EQUALS).
+    Conflict between rule 53 and token AND resolved as reduce (AND < '>').
+    Conflict between rule 53 and token OR resolved as reduce (OR < '>').
+    Conflict between rule 53 and token '>' resolved as an error (%nonassoc '>').
+    Conflict between rule 53 and token '<' resolved as shift ('>' < '<').
+    Conflict between rule 53 and token '+' resolved as shift ('>' < '+').
+    Conflict between rule 53 and token '-' resolved as shift ('>' < '-').
+    Conflict between rule 53 and token '*' resolved as shift ('>' < '*').
+    Conflict between rule 53 and token '.' resolved as shift ('>' < '.').
+
+
+State 64
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   52     | expr '<' expr .  [ATMOST, AND, OR, '>', ')', '{', ',', ';']
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    EQUALS  shift, and go to state 38
+    '+'     shift, and go to state 43
+    '-'     shift, and go to state 44
+    '*'     shift, and go to state 45
+    '.'     shift, and go to state 46
+
+    ATLEAST  error (nonassociative)
+    '<'      error (nonassociative)
+
+    $default  reduce using rule 52 (expr)
+
+    Conflict between rule 52 and token ATLEAST resolved as an error (%nonassoc ATLEAST).
+    Conflict between rule 52 and token ATMOST resolved as reduce (ATMOST < '<').
+    Conflict between rule 52 and token EQUALS resolved as shift ('<' < EQUALS).
+    Conflict between rule 52 and token AND resolved as reduce (AND < '<').
+    Conflict between rule 52 and token OR resolved as reduce (OR < '<').
+    Conflict between rule 52 and token '>' resolved as reduce ('>' < '<').
+    Conflict between rule 52 and token '<' resolved as an error (%nonassoc '<').
+    Conflict between rule 52 and token '+' resolved as shift ('<' < '+').
+    Conflict between rule 52 and token '-' resolved as shift ('<' < '-').
+    Conflict between rule 52 and token '*' resolved as shift ('<' < '*').
+    Conflict between rule 52 and token '.' resolved as shift ('<' < '.').
+
+
+State 65
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   46     | expr '+' expr .  [ATLEAST, ATMOST, EQUALS, AND, OR, '>', '<', '+', '-', ')', '{', ',', ';']
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    '*'  shift, and go to state 45
+    '.'  shift, and go to state 46
+
+    $default  reduce using rule 46 (expr)
+
+    Conflict between rule 46 and token ATLEAST resolved as reduce (ATLEAST < '+').
+    Conflict between rule 46 and token ATMOST resolved as reduce (ATMOST < '+').
+    Conflict between rule 46 and token EQUALS resolved as reduce (EQUALS < '+').
+    Conflict between rule 46 and token AND resolved as reduce (AND < '+').
+    Conflict between rule 46 and token OR resolved as reduce (OR < '+').
+    Conflict between rule 46 and token '>' resolved as reduce ('>' < '+').
+    Conflict between rule 46 and token '<' resolved as reduce ('<' < '+').
+    Conflict between rule 46 and token '+' resolved as reduce (%left '+').
+    Conflict between rule 46 and token '-' resolved as reduce (%left '-').
+    Conflict between rule 46 and token '*' resolved as shift ('+' < '*').
+    Conflict between rule 46 and token '.' resolved as shift ('+' < '.').
+
+
+State 66
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   47     | expr '-' expr .  [ATLEAST, ATMOST, EQUALS, AND, OR, '>', '<', '+', '-', ')', '{', ',', ';']
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    '*'  shift, and go to state 45
+    '.'  shift, and go to state 46
+
+    $default  reduce using rule 47 (expr)
+
+    Conflict between rule 47 and token ATLEAST resolved as reduce (ATLEAST < '-').
+    Conflict between rule 47 and token ATMOST resolved as reduce (ATMOST < '-').
+    Conflict between rule 47 and token EQUALS resolved as reduce (EQUALS < '-').
+    Conflict between rule 47 and token AND resolved as reduce (AND < '-').
+    Conflict between rule 47 and token OR resolved as reduce (OR < '-').
+    Conflict between rule 47 and token '>' resolved as reduce ('>' < '-').
+    Conflict between rule 47 and token '<' resolved as reduce ('<' < '-').
+    Conflict between rule 47 and token '+' resolved as reduce (%left '+').
+    Conflict between rule 47 and token '-' resolved as reduce (%left '-').
+    Conflict between rule 47 and token '*' resolved as shift ('-' < '*').
+    Conflict between rule 47 and token '.' resolved as shift ('-' < '.').
+
+
+State 67
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   45     | expr '*' expr .  [ATLEAST, ATMOST, EQUALS, AND, OR, '>', '<', '+', '-', '*', ')', '{', ',', ';']
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    '.'  shift, and go to state 46
+
+    $default  reduce using rule 45 (expr)
+
+    Conflict between rule 45 and token ATLEAST resolved as reduce (ATLEAST < '*').
+    Conflict between rule 45 and token ATMOST resolved as reduce (ATMOST < '*').
+    Conflict between rule 45 and token EQUALS resolved as reduce (EQUALS < '*').
+    Conflict between rule 45 and token AND resolved as reduce (AND < '*').
+    Conflict between rule 45 and token OR resolved as reduce (OR < '*').
+    Conflict between rule 45 and token '>' resolved as reduce ('>' < '*').
+    Conflict between rule 45 and token '<' resolved as reduce ('<' < '*').
+    Conflict between rule 45 and token '+' resolved as reduce ('+' < '*').
+    Conflict between rule 45 and token '-' resolved as reduce ('-' < '*').
+    Conflict between rule 45 and token '*' resolved as reduce (%left '*').
+    Conflict between rule 45 and token '.' resolved as shift ('*' < '.').
+
+
+State 68
+
+   40 l_expr: expr '.' ident .  [ATLEAST, ATMOST, EQUALS, AND, OR, '>', '<', '+', '-', '*', '.', ')', '{', ':', ',', '=', ';']
+   57 expr: expr '.' ident . '(' actual_args ')'
+
+    '('  shift, and go to state 84
+
+    $default  reduce using rule 40 (l_expr)
+
+
+State 69
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+   61 actual_args_nonempty: expr .  [')', ',']
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    AND      shift, and go to state 39
+    OR       shift, and go to state 40
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+
+    $default  reduce using rule 61 (actual_args_nonempty)
+
+
+State 70
+
+   62 expr: ident '(' actual_args . ')'
+
+    ')'  shift, and go to state 85
+
+
+State 71
+
+   59 actual_args: actual_args_nonempty .  [')']
+   60 actual_args_nonempty: actual_args_nonempty . ',' expr
+
+    ','  shift, and go to state 86
+
+    $default  reduce using rule 59 (actual_args)
+
+
+State 72
+
+   12 formal: error . ':' ident
+
+    ':'  shift, and go to state 87
+
+
+State 73
+
+    4 class: CLASS ident '(' formals ')' . opt_extends '{' statements methods '}'
+    5 opt_extends: . EXTENDS ident
+    6            | . %empty  ['{']
+    7            | . error ident
+
+    error    shift, and go to state 88
+    EXTENDS  shift, and go to state 89
+
+    '{'  reduce using rule 6 (opt_extends)
+
+    opt_extends  go to state 90
+
+
+State 74
+
+   11 formal: ',' . ident ':' ident
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+
+    ident  go to state 91
+
+
+State 75
+
+    9 formals: formals formal .
+
+    $default  reduce using rule 9 (formals)
+
+
+State 76
+
+   10 formal: ident . ':' ident
+   13       | ident . ':' error
+
+    ':'  shift, and go to state 92
+
+
+State 77
+
+   21 statements: statements . statement
+   23 statement_block: '{' statements . '}'
+   24 statement: . WHILE expr statement_block
+   25          | . IF expr statement_block opt_elif_parts
+   29          | . l_expr '=' expr ';'
+   30          | . l_expr ':' ident '=' expr ';'
+   31          | . RETURN expr ';'
+   32          | . RETURN ';'
+   33          | . expr ';'
+   34          | . typecase
+   35 typecase: . TYPECASE expr '{' type_alternatives '}'
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    IF          shift, and go to state 9
+    WHILE       shift, and go to state 10
+    RETURN      shift, and go to state 11
+    TYPECASE    shift, and go to state 12
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+    '}'         shift, and go to state 93
+
+    statement  go to state 19
+    typecase   go to state 20
+    l_expr     go to state 21
+    expr       go to state 22
+    ident      go to state 23
+
+
+State 78
+
+   26 opt_elif_parts: ELIF . expr statement_block opt_elif_parts
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 94
+    ident   go to state 23
+
+
+State 79
+
+   23 statement_block: . '{' statements '}'
+   27 opt_elif_parts: ELSE . statement_block
+
+    '{'  shift, and go to state 50
+
+    statement_block  go to state 95
+
+
+State 80
+
+   25 statement: IF expr statement_block opt_elif_parts .
+
+    $default  reduce using rule 25 (statement)
+
+
+State 81
+
+   35 typecase: TYPECASE expr '{' type_alternatives . '}'
+   37 type_alternatives: type_alternatives . type_alternative
+   38 type_alternative: . ident ':' ident statement_block
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+    '}'    shift, and go to state 96
+
+    type_alternative  go to state 97
+    ident             go to state 98
+
+
+State 82
+
+   30 statement: l_expr ':' ident '=' . expr ';'
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 99
+    ident   go to state 23
+
+
+State 83
+
+   29 statement: l_expr '=' expr ';' .
+
+    $default  reduce using rule 29 (statement)
+
+
+State 84
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   57     | expr '.' ident '(' . actual_args ')'
+   58 actual_args: . %empty  [')']
+   59            | . actual_args_nonempty
+   60 actual_args_nonempty: . actual_args_nonempty ',' expr
+   61                     | . expr
+   62 expr: . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    $default  reduce using rule 58 (actual_args)
+
+    l_expr                go to state 25
+    expr                  go to state 69
+    actual_args           go to state 100
+    actual_args_nonempty  go to state 71
+    ident                 go to state 23
+
+
+State 85
+
+   62 expr: ident '(' actual_args ')' .
+
+    $default  reduce using rule 62 (expr)
+
+
+State 86
+
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   60 actual_args_nonempty: actual_args_nonempty ',' . expr
+   62 expr: . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    l_expr  go to state 25
+    expr    go to state 101
+    ident   go to state 23
+
+
+State 87
+
+   12 formal: error ':' . ident
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+
+    ident  go to state 102
+
+
+State 88
+
+    7 opt_extends: error . ident
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+
+    ident  go to state 103
+
+
+State 89
+
+    5 opt_extends: EXTENDS . ident
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+
+    ident  go to state 104
+
+
+State 90
+
+    4 class: CLASS ident '(' formals ')' opt_extends . '{' statements methods '}'
+
+    '{'  shift, and go to state 105
+
+
+State 91
+
+   11 formal: ',' ident . ':' ident
+
+    ':'  shift, and go to state 106
+
+
+State 92
+
+   10 formal: ident ':' . ident
+   13       | ident ':' . error
+   63 ident: . IDENT
+
+    error  shift, and go to state 107
+    IDENT  shift, and go to state 7
+
+    ident  go to state 108
+
+
+State 93
+
+   23 statement_block: '{' statements '}' .
+
+    $default  reduce using rule 23 (statement_block)
+
+
+State 94
+
+   23 statement_block: . '{' statements '}'
+   26 opt_elif_parts: ELIF expr . statement_block opt_elif_parts
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    AND      shift, and go to state 39
+    OR       shift, and go to state 40
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+    '{'      shift, and go to state 50
+
+    statement_block  go to state 109
+
+
+State 95
+
+   27 opt_elif_parts: ELSE statement_block .
+
+    $default  reduce using rule 27 (opt_elif_parts)
+
+
+State 96
+
+   35 typecase: TYPECASE expr '{' type_alternatives '}' .
+
+    $default  reduce using rule 35 (typecase)
+
+
+State 97
+
+   37 type_alternatives: type_alternatives type_alternative .
+
+    $default  reduce using rule 37 (type_alternatives)
+
+
+State 98
+
+   38 type_alternative: ident . ':' ident statement_block
+
+    ':'  shift, and go to state 110
+
+
+State 99
+
+   30 statement: l_expr ':' ident '=' expr . ';'
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    AND      shift, and go to state 39
+    OR       shift, and go to state 40
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+    ';'      shift, and go to state 111
+
+
+State 100
+
+   57 expr: expr '.' ident '(' actual_args . ')'
+
+    ')'  shift, and go to state 112
+
+
+State 101
+
+   40 l_expr: expr . '.' ident
+   45 expr: expr . '*' expr
+   46     | expr . '+' expr
+   47     | expr . '-' expr
+   49     | expr . EQUALS expr
+   50     | expr . ATMOST expr
+   51     | expr . ATLEAST expr
+   52     | expr . '<' expr
+   53     | expr . '>' expr
+   54     | expr . AND expr
+   55     | expr . OR expr
+   57     | expr . '.' ident '(' actual_args ')'
+   60 actual_args_nonempty: actual_args_nonempty ',' expr .  [')', ',']
+
+    ATLEAST  shift, and go to state 36
+    ATMOST   shift, and go to state 37
+    EQUALS   shift, and go to state 38
+    AND      shift, and go to state 39
+    OR       shift, and go to state 40
+    '>'      shift, and go to state 41
+    '<'      shift, and go to state 42
+    '+'      shift, and go to state 43
+    '-'      shift, and go to state 44
+    '*'      shift, and go to state 45
+    '.'      shift, and go to state 46
+
+    $default  reduce using rule 60 (actual_args_nonempty)
+
+
+State 102
+
+   12 formal: error ':' ident .
+
+    $default  reduce using rule 12 (formal)
+
+
+State 103
+
+    7 opt_extends: error ident .
+
+    $default  reduce using rule 7 (opt_extends)
+
+
+State 104
+
+    5 opt_extends: EXTENDS ident .
+
+    $default  reduce using rule 5 (opt_extends)
+
+
+State 105
+
+    4 class: CLASS ident '(' formals ')' opt_extends '{' . statements methods '}'
+   21 statements: . statements statement
+   22           | . %empty
+
+    $default  reduce using rule 22 (statements)
+
+    statements  go to state 113
+
+
+State 106
+
+   11 formal: ',' ident ':' . ident
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+
+    ident  go to state 114
+
+
+State 107
+
+   13 formal: ident ':' error .
+
+    $default  reduce using rule 13 (formal)
+
+
+State 108
+
+   10 formal: ident ':' ident .
+
+    $default  reduce using rule 10 (formal)
+
+
+State 109
+
+   26 opt_elif_parts: . ELIF expr statement_block opt_elif_parts
+   26               | ELIF expr statement_block . opt_elif_parts
+   27               | . ELSE statement_block
+   28               | . %empty  [$end, DEF, IF, WHILE, RETURN, TYPECASE, NOT, IDENT, INT_LIT, STRING_LIT, '-', '(', '}']
+
+    ELIF  shift, and go to state 78
+    ELSE  shift, and go to state 79
+
+    $default  reduce using rule 28 (opt_elif_parts)
+
+    opt_elif_parts  go to state 115
+
+
+State 110
+
+   38 type_alternative: ident ':' . ident statement_block
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+
+    ident  go to state 116
+
+
+State 111
+
+   30 statement: l_expr ':' ident '=' expr ';' .
+
+    $default  reduce using rule 30 (statement)
+
+
+State 112
+
+   57 expr: expr '.' ident '(' actual_args ')' .
+
+    $default  reduce using rule 57 (expr)
+
+
+State 113
+
+    4 class: CLASS ident '(' formals ')' opt_extends '{' statements . methods '}'
+   14 methods: . %empty  [DEF, '}']
+   15        | . methods method
+   21 statements: statements . statement
+   24 statement: . WHILE expr statement_block
+   25          | . IF expr statement_block opt_elif_parts
+   29          | . l_expr '=' expr ';'
+   30          | . l_expr ':' ident '=' expr ';'
+   31          | . RETURN expr ';'
+   32          | . RETURN ';'
+   33          | . expr ';'
+   34          | . typecase
+   35 typecase: . TYPECASE expr '{' type_alternatives '}'
+   39 l_expr: . IDENT
+   40       | . expr '.' ident
+   41 expr: . '(' expr ')'
+   42     | . l_expr
+   43     | . STRING_LIT
+   44     | . INT_LIT
+   45     | . expr '*' expr
+   46     | . expr '+' expr
+   47     | . expr '-' expr
+   48     | . '-' expr
+   49     | . expr EQUALS expr
+   50     | . expr ATMOST expr
+   51     | . expr ATLEAST expr
+   52     | . expr '<' expr
+   53     | . expr '>' expr
+   54     | . expr AND expr
+   55     | . expr OR expr
+   56     | . NOT expr
+   57     | . expr '.' ident '(' actual_args ')'
+   62     | . ident '(' actual_args ')'
+   63 ident: . IDENT
+
+    IF          shift, and go to state 9
+    WHILE       shift, and go to state 10
+    RETURN      shift, and go to state 11
+    TYPECASE    shift, and go to state 12
+    NOT         shift, and go to state 13
+    IDENT       shift, and go to state 14
+    INT_LIT     shift, and go to state 15
+    STRING_LIT  shift, and go to state 16
+    '-'         shift, and go to state 17
+    '('         shift, and go to state 18
+
+    $default  reduce using rule 14 (methods)
+
+    methods    go to state 117
+    statement  go to state 19
+    typecase   go to state 20
+    l_expr     go to state 21
+    expr       go to state 22
+    ident      go to state 23
+
+
+State 114
+
+   11 formal: ',' ident ':' ident .
+
+    $default  reduce using rule 11 (formal)
+
+
+State 115
+
+   26 opt_elif_parts: ELIF expr statement_block opt_elif_parts .
+
+    $default  reduce using rule 26 (opt_elif_parts)
+
+
+State 116
+
+   23 statement_block: . '{' statements '}'
+   38 type_alternative: ident ':' ident . statement_block
+
+    '{'  shift, and go to state 50
+
+    statement_block  go to state 118
+
+
+State 117
+
+    4 class: CLASS ident '(' formals ')' opt_extends '{' statements methods . '}'
+   15 methods: methods . method
+   16 method: . DEF ident '(' formals ')' return_type statement_block
+   17       | . DEF ident '(' formals ')' return_type '{' error '}'
+
+    DEF  shift, and go to state 119
+    '}'  shift, and go to state 120
+
+    method  go to state 121
+
+
+State 118
+
+   38 type_alternative: ident ':' ident statement_block .
+
+    $default  reduce using rule 38 (type_alternative)
+
+
+State 119
+
+   16 method: DEF . ident '(' formals ')' return_type statement_block
+   17       | DEF . ident '(' formals ')' return_type '{' error '}'
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+
+    ident  go to state 122
+
+
+State 120
+
+    4 class: CLASS ident '(' formals ')' opt_extends '{' statements methods '}' .
+
+    $default  reduce using rule 4 (class)
+
+
+State 121
+
+   15 methods: methods method .
+
+    $default  reduce using rule 15 (methods)
+
+
+State 122
+
+   16 method: DEF ident . '(' formals ')' return_type statement_block
+   17       | DEF ident . '(' formals ')' return_type '{' error '}'
+
+    '('  shift, and go to state 123
+
+
+State 123
+
+    8 formals: . %empty
+    9        | . formals formal
+   16 method: DEF ident '(' . formals ')' return_type statement_block
+   17       | DEF ident '(' . formals ')' return_type '{' error '}'
+
+    $default  reduce using rule 8 (formals)
+
+    formals  go to state 124
+
+
+State 124
+
+    9 formals: formals . formal
+   10 formal: . ident ':' ident
+   11       | . ',' ident ':' ident
+   12       | . error ':' ident
+   13       | . ident ':' error
+   16 method: DEF ident '(' formals . ')' return_type statement_block
+   17       | DEF ident '(' formals . ')' return_type '{' error '}'
+   63 ident: . IDENT
+
+    error  shift, and go to state 72
+    IDENT  shift, and go to state 7
+    ')'    shift, and go to state 125
+    ','    shift, and go to state 74
+
+    formal  go to state 75
+    ident   go to state 76
+
+
+State 125
+
+   16 method: DEF ident '(' formals ')' . return_type statement_block
+   17       | DEF ident '(' formals ')' . return_type '{' error '}'
+   18 return_type: . ':' ident
+   19            | . %empty  ['{']
+   20            | . error '{'
+
+    error  shift, and go to state 126
+    ':'    shift, and go to state 127
+
+    '{'  reduce using rule 19 (return_type)
+
+    return_type  go to state 128
+
+
+State 126
+
+   20 return_type: error . '{'
+
+    '{'  shift, and go to state 129
+
+
+State 127
+
+   18 return_type: ':' . ident
+   63 ident: . IDENT
+
+    IDENT  shift, and go to state 7
+
+    ident  go to state 130
+
+
+State 128
+
+   16 method: DEF ident '(' formals ')' return_type . statement_block
+   17       | DEF ident '(' formals ')' return_type . '{' error '}'
+   23 statement_block: . '{' statements '}'
+
+    '{'  shift, and go to state 131
+
+    statement_block  go to state 132
+
+
+State 129
+
+   20 return_type: error '{' .
+
+    $default  reduce using rule 20 (return_type)
+
+
+State 130
+
+   18 return_type: ':' ident .
+
+    $default  reduce using rule 18 (return_type)
+
+
+State 131
+
+   17 method: DEF ident '(' formals ')' return_type '{' . error '}'
+   21 statements: . statements statement
+   22           | . %empty  [IF, WHILE, RETURN, TYPECASE, NOT, IDENT, INT_LIT, STRING_LIT, '-', '(', '}']
+   23 statement_block: '{' . statements '}'
+
+    error  shift, and go to state 133
+
+    IF          reduce using rule 22 (statements)
+    WHILE       reduce using rule 22 (statements)
+    RETURN      reduce using rule 22 (statements)
+    TYPECASE    reduce using rule 22 (statements)
+    NOT         reduce using rule 22 (statements)
+    IDENT       reduce using rule 22 (statements)
+    INT_LIT     reduce using rule 22 (statements)
+    STRING_LIT  reduce using rule 22 (statements)
+    '-'         reduce using rule 22 (statements)
+    '('         reduce using rule 22 (statements)
+    '}'         reduce using rule 22 (statements)
+
+    statements  go to state 77
+
+
+State 132
+
+   16 method: DEF ident '(' formals ')' return_type statement_block .
+
+    $default  reduce using rule 16 (method)
+
+
+State 133
+
+   17 method: DEF ident '(' formals ')' return_type '{' error . '}'
+
+    '}'  shift, and go to state 134
+
+
+State 134
+
+   17 method: DEF ident '(' formals ')' return_type '{' error '}' .
+
+    $default  reduce using rule 17 (method)
