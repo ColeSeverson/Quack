@@ -497,20 +497,33 @@ namespace TypeChecker {
             return "Boolean";
         
         }else if(stat->getType() == AST::statementEnum::CONSTRUCT) {
-            std::cout << Found a constructor call << std::endl;
+            std::cout << "Found a constructor call" << std::endl;
             //get the constructor from the classes table
             AST::Construct * construct = dynamic_cast<AST::Construct *>(stat);
 
             std::vector<struct Var *> actuals;
             for(auto act : construct->getArgs()->getElements()) {
                 struct Var * var = new struct Var();
-                var->type = act->getType();
+                var->type = parseExpr(clazz, method, act);
                 var->name = "";
-                actuals.insert(var);
+                actuals.push_back(var);
             }
 
             //now lets check to make sure the method call lines up
-            
+            std::map<std::string, struct Class *>::iterator it = classes.find(construct->getName()->getText());
+            if(it == classes.end()) {
+                report::error("Constructor name " + construct->getName()->getText() + " is invalid");
+                exit(8);
+            } else {
+                struct Method method = {NULL, construct->getName()->getText(), &actuals, NULL, construct->getName()->getText()};
+                if(compareMethods(&method, it->second->constructor) != 0) {
+                    report::error("Constructor call for " + it->first + " does not have the correct arguments");
+                    exit(64);
+                } else {
+                    return it->first;
+                }
+            }
+
         }else if(stat->getType() == AST::statementEnum::EXPR) {
             std::cout << "Found an expression" << std::endl;
             report::error("This really shouldn't happen... ");
@@ -538,7 +551,7 @@ namespace TypeChecker {
 
         std::string type = input->returnType;
         std::map<std::string, struct Class *>::iterator it = classes.find(type);
-        if(it == classes.end() && type.compare("None") != 0) {
+        if(it == classes.end() && type.compare("Nothing") != 0 && type.compare("None") != 0) {
             report::error("Invalid return type");
             exit(16);
         }
@@ -561,11 +574,12 @@ namespace TypeChecker {
         std::cout << "CLass: " << input->name << " Super: " << input->super << std::endl;
         //When pulling the methods from the super lets make sure they don't overlap
         //If they do overlap it must be the same signature!!
+        std::vector<struct Method *> inherited;
         for(const auto& pair : *classes[input->super]->methods) {
             std::map<std::string, struct Method *>::iterator it = input->methods->find(pair.first);
             if(it == input->methods->end()) {
                 //We don't have this method! Inherit it!
-                input->methods->insert(pair);
+                inherited.push_back(pair.second);
             } else {
                 //We do have this method... Make sure the signature matches!
                 if(compareMethods(it->second, pair.second) == -1) {
@@ -605,6 +619,28 @@ namespace TypeChecker {
             struct Method * method = pair.second;
             parseMethod(input, method);
         }
+        for(auto inh : inherited) {
+            input->methods->insert({inh->name, inh});
+        }
+
+        std::map<std::string, struct Class *>::iterator superit = classes.find(input->super);
+        for(const auto& pair : *input->fields) {
+            std::map<std::string, struct Var *>::iterator varit = superit->second->fields->find(pair.first);
+            if(varit != superit->second->fields->end()) {
+                if(varit->second->type != pair.second->type) {
+                    report::error("The types of the fields of " + input->name + " do not match its super");
+                    exit(64);
+                }
+            }
+        }
+
+        for(const auto& pair : *superit->second->fields) {
+            std::map<std::string, struct Var *>::iterator varit = input->fields->find(pair.first);
+            if(varit == input->fields->end()) {
+                report::error("Class " + input->name + " does not instantiate all of its super's fields");
+                exit(32);
+            }
+        }
 
         return 0;
     }
@@ -614,6 +650,14 @@ namespace TypeChecker {
         AST::Program *root = dynamic_cast<AST::Program *>(root_);   
         //we need the base classes for Obj, Int, String, Bool as well as the base methods that these base classes have as well
         std::map<std::string, struct Method *> * objMethods = new std::map<std::string, struct Method *>(); //TOADD METHODS
+        struct Method * Print = new struct Method();
+        Print->name = "PRINT";
+        Print->returnType = "Nothing";
+        Print->table = NULL;
+        Print->arguments = new std::vector<struct Var *>();
+        Print->node = NULL;
+        Print->table = NULL;
+        objMethods->insert({Print->name, Print});
         Obj = {NULL, "Obj", "Nothing", NULL, objMethods, new std::map<std::string, struct Var *>()};
 
         std::map<std::string, struct Method *> * intMethods = new std::map<std::string, struct Method *>(); //TOADD METHODS
@@ -695,7 +739,7 @@ namespace TypeChecker {
             parseExpr(NULL, &fakeMethod,  statement);
         }
 
-        printClasses();
+        //printClasses();
         std::cout << "Variables in max scope " << printVariablesInLine(scopeVariables) << std::endl;
 
         return 0;

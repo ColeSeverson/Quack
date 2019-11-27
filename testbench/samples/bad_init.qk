@@ -6,7 +6,7 @@
 
 class BadInit() {
 
-   def bad_init() {
+   def bad_init(): Nothing {
       rep = 0;
       n_reps = 3;
       while rep < n_reps {
