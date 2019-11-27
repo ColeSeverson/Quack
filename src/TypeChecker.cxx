@@ -230,6 +230,10 @@ namespace TypeChecker {
         return 0;
     }
 
+    std::string classIntersect(std::string one, std::string two) {
+
+        return "";
+    }
     std::map<std::string, struct Var *> * intersect(std::map<std::string, struct Var *> * one, std::map<std::string, struct Var *> * two) {
         std::map<std::string, struct Var *> *output = new std::map<std::string, struct Var *>();
         for(const auto& pair : *one) {
