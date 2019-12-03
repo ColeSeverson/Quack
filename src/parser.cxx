@@ -48,11 +48,21 @@ int main(int argc, char **argv) {
     char c;
     FILE *f;
     int index;
-    int debug; // 0 = no debugging, 1 = full tracing
+    int debug = 0; // 0 = no debugging, 1 = full tracing
+    int json = 0;
+    int type = 0;
 
-    while ((c = getopt(argc, argv, "t")) != -1) {
+    while ((c = getopt(argc, argv, "tjd")) != -1) {
         if (c == 't') {
-            std::cerr <<  "Debugging mode\n";
+            std::cerr <<  "Type Checking mode\n";
+            type = 1;
+        }
+        if (c == 'j') {
+            std::cerr << "Json mode\n";
+            json = 1;
+        }
+        if (c ==  'd') {
+            std::cerr << "Debugging mode\n";
             debug = 1;
         }
     }
@@ -76,14 +86,16 @@ int main(int argc, char **argv) {
 	        }
 
             //now for types
-            if (TypeChecker::Check(root) != 0) {
+            if (type == 1 && TypeChecker::Check(root, debug) != 0) {
                 std::cout << "Failed the type checker terminating..." << std::endl;
                 exit(32);
             }
-	    //Print the json if all goes correctly
-	    AST::AST_print_context context;
-        root->json(std::cout, context);
-        std::cout << std::endl;
+            if(json == 1) {
+            //Print the json if all goes correctly
+            AST::AST_print_context context;
+            root->json(std::cout, context);
+            std::cout << std::endl;
+            }
         } else {
             std::cout << "No tree produced." << std::endl;
             if(!report::ok()) {

@@ -7,6 +7,7 @@
 #include <map>
 
 namespace TypeChecker {
+    int debugLevel;
     //define structs for managing definitions
     enum isInit {
       unseen, no, yes, unknown  
@@ -35,6 +36,12 @@ namespace TypeChecker {
     //Note that you cant have methods outside of a class... So we won't use this methods
     std::map<std::string, struct Class *> classes;
     std::map<std::string, struct Var *> variables;
+
+    void debugPrint(std::string classs, std::string method, std::string message) {
+        if(debugLevel == 1) {
+            std::cout << "Class: " << classs << " Method: " << method << " --" << message << std::endl;
+        }
+    }
 
     //Vars can be instantiated with type defined or not... If not it will be the empty string
     struct Var * createVar(AST::Ident * name, AST::Ident * type) {
@@ -158,8 +165,7 @@ namespace TypeChecker {
     //this returns a 'location'
     struct Var * processLexpr(struct Class * clazz, struct Method * method, AST::LExpr * lExpr) {
         if(lExpr->getType() == AST::lexprTypes::IDENT) {
-            std::cout << "Found lexpr" << std::endl;
-
+            debugPrint(clazz->name, method->name, "Found a Lexpr");
             std::string name = ((AST::Ident *)lExpr)->getText();
 
             if(name.compare("this") == 0) {
@@ -199,7 +205,9 @@ namespace TypeChecker {
         }else if (lExpr->getType() == AST::lexprTypes::DOT) {
             //if left side is this and clazz is null error out since that means we are in the global scope
             AST::Dot * dot = dynamic_cast<AST::Dot *>(lExpr);
-            std::cout << "Found Dot assign" << std::endl;
+            
+            debugPrint(clazz->name, method->name, "Found a Dot");
+            
             std::string name = dot->getRight()->getText();
             //now we need to resolve the location
             std::string object = parseExpr(clazz, method, dot->getLeft());
@@ -266,17 +274,16 @@ namespace TypeChecker {
     //END HELPER METHODS TO BE REMOVED
     //This is run in the methods to parse the statments. It also acts as type inference. Needs reference to method, class, and statemtn
     std::string parseExpr(struct Class * clazz, struct Method * method, AST::Statement * stat) {
-        std::cout << "Entering the parsing statments method" << std::endl;
+        debugPrint(clazz->name, method->name, "Entering the parseExpr method");
         //we will have a seperate case for ASSIGN,ASSIGNDECLARE,EXPR,RETURN,IF,WHILE,LOAD,INTCONST,STRINGCONST,CALL,OOF
         if(stat->getType() == AST::statementEnum::INTCONST) {
-            
+            debugPrint(clazz->name, method->name, "Found an int const");
             return "Int";
         }else if(stat->getType() == AST::statementEnum::STRINGCONST) {
-            std::cout << "Found an String constant" << std::endl;
-
+            debugPrint(clazz->name, method->name, "Found a string const");
             return "String";
         }else if(stat->getType() == AST::statementEnum::ASSIGN) {
-            std::cout << "Found an Assign!" << std::endl;
+            debugPrint(clazz->name, method->name, "Found an Assign");
             //ASSIGN is the most basic case. The left side variable gets the type of the right side. Lexpr can be either a local variable or a field
             //First we get the type from the rexpr
             //Then we resolve the location and name of the lexpr and assign it the type
@@ -299,18 +306,17 @@ namespace TypeChecker {
             if(location->init == no) {
                 location->type = type;
                 location->init = yes;
-                std::cout << "Just initialized variable: " << location->name << "with enum value" << location->init << std::endl;
+                debugPrint(clazz->name, method->name, location->name + "is being initialized");
             }else if (location->init == yes) {
                 if (location->type.compare(type) != 0) {
                     report::error("Type mismatch variable " + location->name + " has type " + location->type + " so you cannot assign a " + type);
-                    std::cout << "Class " << clazz->name << " Method" << method->name << " Variable: "<< location->name << ":" << location->type << std::endl;
                     exit(64);
                 } //we dont need to do anything else right now since it is already the right type
             }
 
             return "Nothing";
         }else if(stat->getType() == AST::statementEnum::ASSIGNDECLARE) {
-            std::cout << "Found an AssignDeclare!" << std::endl;
+            debugPrint(clazz->name, method->name, "Found an assigndeclare");
             //ASSIGN is the most basic case. The left side variable gets the type of the right side. Lexpr can be either a local variable or a field
             //First we get the type from the rexpr
             //Then we resolve the location and name of the lexpr and assign it the type
@@ -340,19 +346,18 @@ namespace TypeChecker {
             }else if (location->init == yes) {
                 if (location->type.compare(type) != 0) {
                     report::error("Type mismatch variable " + location->name + " has type " + location->type + " so you cannot assign a " + type);
-                    std::cout << "Class " << clazz->name << " Method" << method->name << " Variable: "<< location->name << ":" << location->type << std::endl;
                     exit(64);
                 } //we dont need to do anything else right now since it is already the right type
             }
 
             return "Nothing";
         }else if(stat->getType() == AST::statementEnum::LOAD) {
-            std::cout << "Found an load!" << std::endl;
+            debugPrint(clazz->name, method->name, "Found a Load");
             AST::Load * load = dynamic_cast<AST::Load *>(stat);
 
             Var * value = processLexpr(clazz, method, load->getLocation());
 
-            std::cout << "Loaded var: " << value->name << ": " << value->type << " intialized: " << value->init << std::endl;
+            debugPrint(clazz->name, method->name, "Loaded variable " + value->name);
             if(value->init != yes) {
                 report::error("Loading possible uninitialized variable: " + value->name);
                 exit(32);
@@ -360,7 +365,7 @@ namespace TypeChecker {
 
             return value->type;
         }else if(stat->getType() == AST::statementEnum::RETURN) {
-           std::cout << "Found a return" << std::endl;
+           debugPrint(clazz->name, method->name, "Found a return");
            AST::Return * toReturn = dynamic_cast<AST::Return *>(stat);
 
            std::string type = parseExpr(clazz, method, toReturn->getExpr());
@@ -378,7 +383,7 @@ namespace TypeChecker {
                 return type;
             }
         }else if(stat->getType() == AST::statementEnum::CALL) {
-            std::cout << "Found a call" << std::endl;
+            debugPrint(clazz->name, method->name, "Found a call");
             AST::Call * call = dynamic_cast<AST::Call *>(stat);
             
             //first lets make sure the class is good
@@ -415,7 +420,7 @@ namespace TypeChecker {
             struct Method * temp = classes[classname]->methods->at(call->getMethod()->getText());
             return temp->returnType;
         }else if (stat->getType() == AST::statementEnum::IF) {
-            std::cout << "Found If" << std::endl;
+            debugPrint(clazz->name, method->name, "Found an if");
             //first things first lets make two copies of the method->table
             std::map<std::string, struct Var *> *ttrue = new std::map<std::string, struct Var *>(*method->table);
             std::map<std::string, struct Var *> *tfalse = new std::map<std::string, struct Var *>(*method->table);
@@ -449,7 +454,7 @@ namespace TypeChecker {
             return "Nothing";
 
         }else if (stat->getType() == AST::statementEnum::WHILE) {
-            std::cout << "Found While" << std::endl;
+            debugPrint(clazz->name, method->name, "Found a while");
             AST::While * whilestat = dynamic_cast<AST::While *>(stat);
             std::map<std::string, struct Var *> *ttrue = new std::map<std::string, struct Var *>(*method->table);
             std::map<std::string, struct Var *> *fieldtrue = new std::map<std::string, struct Var *>(*clazz->fields);
@@ -468,7 +473,7 @@ namespace TypeChecker {
             return "Nothing";            
 
         }else if (stat->getType() == AST::statementEnum::AND) {
-            std::cout << "Foudn ANd" << std::endl;
+            debugPrint(clazz->name, method->name, "Found an AND");
             AST::And * statand = dynamic_cast<AST::And *>(stat);
             std::string one = parseExpr(clazz, method,statand->getLeft());
             std::string two = parseExpr(clazz, method, statand->getRight());
@@ -480,7 +485,7 @@ namespace TypeChecker {
 
             return "Boolean";
         }else if (stat->getType() == AST::statementEnum::OR) {
-            std::cout << "Found Or" << std::endl;
+            debugPrint(clazz->name, method->name, "Found an OR");
             AST::Or * statand = dynamic_cast<AST::Or *>(stat);
             std::string one = parseExpr(clazz, method,statand->getLeft());
             std::string two = parseExpr(clazz, method, statand->getRight());
@@ -492,7 +497,7 @@ namespace TypeChecker {
 
             return "Boolean";
         }else if (stat->getType() == AST::statementEnum::NOT) {
-            std::cout << "Found NOT" << std::endl;
+            debugPrint(clazz->name, method->name, "Found a Not");
             AST::Not * notstat = dynamic_cast<AST::Not *>(stat);
             if(parseExpr(clazz, method, notstat).compare("Boolean") != 0) {
                 report::error("Non boolean value in not statemetn");
@@ -501,7 +506,7 @@ namespace TypeChecker {
             return "Boolean";
         
         }else if(stat->getType() == AST::statementEnum::CONSTRUCT) {
-            std::cout << "Found a constructor call" << std::endl;
+            debugPrint(clazz->name, method->name, "Found a Constructor Call");
             //get the constructor from the classes table
             AST::Construct * construct = dynamic_cast<AST::Construct *>(stat);
 
@@ -529,11 +534,10 @@ namespace TypeChecker {
             }
 
         }else if(stat->getType() == AST::statementEnum::EXPR) {
-            std::cout << "Found an expression" << std::endl;
             report::error("This really shouldn't happen... ");
             exit(16);
         }else if(stat->getType() == AST::statementEnum::OOF) {
-            std::cout << "Found an oof" << std::endl;
+            report::error("Found an oof... Check the AST");
             exit(256);
         } 
 
@@ -550,7 +554,7 @@ namespace TypeChecker {
             //This is the constructor then
             constructor = true;
             input->returnType = parent->name;
-            std::cout << "Return type for constructor set to " << input->returnType << std::endl;
+            debugPrint(parent->name, input->name, "Constructor return set to " + input->returnType);
         }
 
         std::string type = input->returnType;
@@ -575,7 +579,7 @@ namespace TypeChecker {
     }
     //Method to parse class
     int parseClass(struct Class * input) {
-        std::cout << "CLass: " << input->name << " Super: " << input->super << std::endl;
+        debugPrint(input->super, "parseClass", "Class " + input->name + " Super: " + input->super);
         //When pulling the methods from the super lets make sure they don't overlap
         //If they do overlap it must be the same signature!!
         std::vector<struct Method *> inherited;
@@ -649,7 +653,8 @@ namespace TypeChecker {
         return 0;
     }
     //We want to check types, duplicate names between classess/methods/variables, methods, class super signatures, and init before use    
-    int Check(AST::ASTNode *root_) {
+    int Check(AST::ASTNode *root_, int debug) {
+        debugLevel = debug;
         //caste the root
         AST::Program *root = dynamic_cast<AST::Program *>(root_);   
         //we need the base classes for Obj, Int, String, Bool as well as the base methods that these base classes have as well
@@ -744,7 +749,8 @@ namespace TypeChecker {
         }
 
         //printClasses();
-        std::cout << "Variables in max scope " << printVariablesInLine(scopeVariables) << std::endl;
+        if(debugLevel == 1)
+            std::cout << "Variables in max scope " << printVariablesInLine(scopeVariables) << std::endl;
 
         return 0;
     }
