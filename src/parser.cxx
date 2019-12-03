@@ -48,22 +48,32 @@ int main(int argc, char **argv) {
     char c;
     FILE *f;
     int index;
-    int debug = 0; // 0 = no debugging, 1 = full tracing
+    int debug = 1; // 0 = no debugging, 1 = full tracing
     int json = 0;
-    int type = 0;
+    int type = 1;
+    int trace = 0;
+    int clazz = 1;
 
-    while ((c = getopt(argc, argv, "tjd")) != -1) {
+    while ((c = getopt(argc, argv, "tjdrc")) != -1) {
         if (c == 't') {
-            std::cerr <<  "Type Checking mode\n";
-            type = 1;
+            std::cerr <<  "Type Checking mode disabled" << std::endl;
+            type = 0;
         }
         if (c == 'j') {
-            std::cerr << "Json mode\n";
+            std::cerr << "Json mode" <<std::endl;
             json = 1;
         }
         if (c ==  'd') {
-            std::cerr << "Debugging mode\n";
-            debug = 1;
+            std::cerr << "Debugging mode disabled" << std::endl;
+            debug = 0;
+        }
+        if (c == 'r') {
+            std::cerr << "Tracing mode" << std::endl;
+            trace = 1;
+        }
+        if (c == 'c') {
+            std::cerr << "Class check disabled" << std::endl;
+            clazz = 0;
         }
     }
 
@@ -73,14 +83,17 @@ int main(int argc, char **argv) {
             exit(1);
         }
         Driver driver(f);
-        if (debug) driver.debug();
+        if (trace) driver.debug();
         AST::ASTNode *root = driver.parse();
         if (root != nullptr) {
             if(!report::ok()) {
                 exit(8);
             }
+            if(debug == 1) {
+                std::cout << "root Node is non null" << std::endl;
+            }
             //Now we do the semantic checks 
-	        if (ClassChecker::CheckHierarchy(root) != 0) {
+	        if (clazz == 1 && ClassChecker::CheckHierarchy(root) != 0) {
 	        	std::cout << "Class Hierarchy invalid terminating..." << std::endl;
 		        exit(16);
 	        }
@@ -91,10 +104,10 @@ int main(int argc, char **argv) {
                 exit(32);
             }
             if(json == 1) {
-            //Print the json if all goes correctly
-            AST::AST_print_context context;
-            root->json(std::cout, context);
-            std::cout << std::endl;
+                //Print the json if all goes correctly
+                AST::AST_print_context context;
+                root->json(std::cout, context);
+                std::cout << std::endl;
             }
         } else {
             std::cout << "No tree produced." << std::endl;

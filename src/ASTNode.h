@@ -216,6 +216,7 @@ namespace AST {
             statementEnum type = OOF;
         public:
             statementEnum getType() {return this->type;};
+            std::string typeAnnotation = "Nothing";
     };
 
     /* A statement could be just an expression ... but
@@ -225,6 +226,7 @@ namespace AST {
         public:
             explicit Expr() {
                 type = EXPR;
+                typeAnnotation = "Nothing";
             }
     };
 

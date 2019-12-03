@@ -278,9 +278,11 @@ namespace TypeChecker {
         //we will have a seperate case for ASSIGN,ASSIGNDECLARE,EXPR,RETURN,IF,WHILE,LOAD,INTCONST,STRINGCONST,CALL,OOF
         if(stat->getType() == AST::statementEnum::INTCONST) {
             debugPrint(clazz->name, method->name, "Found an int const");
+            stat->typeAnnotation = "Int";
             return "Int";
         }else if(stat->getType() == AST::statementEnum::STRINGCONST) {
             debugPrint(clazz->name, method->name, "Found a string const");
+            stat->typeAnnotation = "String";
             return "String";
         }else if(stat->getType() == AST::statementEnum::ASSIGN) {
             debugPrint(clazz->name, method->name, "Found an Assign");
@@ -288,8 +290,8 @@ namespace TypeChecker {
             //First we get the type from the rexpr
             //Then we resolve the location and name of the lexpr and assign it the type
             AST::Assign *assi = dynamic_cast<AST::Assign *>(stat); 
-            std::string type = parseExpr(clazz, method, assi->getExpr());
             struct Var * location = processLexpr(clazz, method, assi->getLexpr());
+            std::string type = parseExpr(clazz, method, assi->getExpr());
     
             if(location->name.compare("True") == 0 || location->name.compare("true") == 0 ||
                 location->name.compare("False") == 0 || location->name.compare("false") == 0) {
@@ -363,12 +365,13 @@ namespace TypeChecker {
                 exit(32);
             }
 
+            stat->typeAnnotation = value->type;
             return value->type;
         }else if(stat->getType() == AST::statementEnum::RETURN) {
            debugPrint(clazz->name, method->name, "Found a return");
-           AST::Return * toReturn = dynamic_cast<AST::Return *>(stat);
+           AST::Return * ReturnAST = dynamic_cast<AST::Return *>(stat);
 
-           std::string type = parseExpr(clazz, method, toReturn->getExpr());
+           std::string type = parseExpr(clazz, method, ReturnAST->getExpr());
 
             /*std::map<std::string, struct Class *>::iterator it = classes.find(type);
             if(it == classes.end()) {
@@ -380,6 +383,7 @@ namespace TypeChecker {
                 report::error("Bad return type: " + type + " in method " + method->name + " should be a " + method->returnType);
                 exit(64);
             } else {
+                stat->typeAnnotation = type;
                 return type;
             }
         }else if(stat->getType() == AST::statementEnum::CALL) {
@@ -418,6 +422,7 @@ namespace TypeChecker {
                 }
             }
             struct Method * temp = classes[classname]->methods->at(call->getMethod()->getText());
+            stat->typeAnnotation = temp->returnType;
             return temp->returnType;
         }else if (stat->getType() == AST::statementEnum::IF) {
             debugPrint(clazz->name, method->name, "Found an if");
@@ -470,6 +475,7 @@ namespace TypeChecker {
             }
             method->table = intersect(temp, method->table);
             clazz->fields = intersect(tempfields, fieldtrue);
+
             return "Nothing";            
 
         }else if (stat->getType() == AST::statementEnum::AND) {
@@ -482,7 +488,7 @@ namespace TypeChecker {
                 report::error("One or more values in an AND are not booleans");
                 exit(64);
             }
-
+            stat->typeAnnotation = "Boolean";
             return "Boolean";
         }else if (stat->getType() == AST::statementEnum::OR) {
             debugPrint(clazz->name, method->name, "Found an OR");
@@ -495,6 +501,7 @@ namespace TypeChecker {
                 exit(64);
             }
 
+            stat->typeAnnotation = "Boolean";
             return "Boolean";
         }else if (stat->getType() == AST::statementEnum::NOT) {
             debugPrint(clazz->name, method->name, "Found a Not");
@@ -503,6 +510,7 @@ namespace TypeChecker {
                 report::error("Non boolean value in not statemetn");
                 exit(64);
             }
+            stat->typeAnnotation = "Boolean";
             return "Boolean";
         
         }else if(stat->getType() == AST::statementEnum::CONSTRUCT) {
@@ -529,6 +537,7 @@ namespace TypeChecker {
                     report::error("Constructor call for " + it->first + " does not have the correct arguments");
                     exit(64);
                 } else {
+                    stat->typeAnnotation = it->first;
                     return it->first;
                 }
             }
@@ -655,6 +664,7 @@ namespace TypeChecker {
     //We want to check types, duplicate names between classess/methods/variables, methods, class super signatures, and init before use    
     int Check(AST::ASTNode *root_, int debug) {
         debugLevel = debug;
+        debugPrint("", "", "Entering Check method");
         //caste the root
         AST::Program *root = dynamic_cast<AST::Program *>(root_);   
         //we need the base classes for Obj, Int, String, Bool as well as the base methods that these base classes have as well
@@ -694,9 +704,7 @@ namespace TypeChecker {
         std::map<std::string, struct Method *> * booleanMethods = new std::map<std::string, struct Method *>();
         Boolean = {NULL, "Boolean", "Obj", NULL, booleanMethods, NULL};
         
-
-        //Create the methods for them Str(), Plus() etc
-
+        debugPrint("", "", "Finished adding default methods");
         //Now we will create our reference of classes to check and the valid types
         classes.insert({"Obj", &Obj});
         classes.insert({"Int", &Int});
@@ -728,7 +736,7 @@ namespace TypeChecker {
                 }
             }
         }
-
+        debugPrint("", "", "Finished topo sorting the classes");
         //Now we have our ''Global'' scope done. A reference to all of the classes added so we can use their constructors
 
         //Now lets parse those classes! 
@@ -741,13 +749,17 @@ namespace TypeChecker {
             parseClass(clazz);
         }
 
+        debugPrint("", "", "Finished parsing the classes");
+
         std::map<std::string, struct Var *> *scopeVariables = new std::map<std::string, struct Var *>();
         struct Method fakeMethod = {NULL, "ProgramLevelFakeMethod", NULL, scopeVariables, "Nothing"};
+        struct Class fakeClazz = {NULL, "GLobal", "Nothing", NULL, NULL, NULL};
         for(auto node : root->statements_.getElements()) {
             AST::Statement * statement = dynamic_cast<AST::Statement *>(node);
-            parseExpr(NULL, &fakeMethod,  statement);
+            parseExpr(&fakeClazz, &fakeMethod,  statement);
         }
 
+        debugPrint("","", "Finished parsing the global statements");
         //printClasses();
         if(debugLevel == 1)
             std::cout << "Variables in max scope " << printVariablesInLine(scopeVariables) << std::endl;
