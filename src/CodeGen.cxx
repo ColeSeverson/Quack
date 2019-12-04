@@ -44,7 +44,7 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
             {
             AST::StrConst * strConst = dynamic_cast<AST::StrConst *>(statement);
             reg = this->getRegisterNum();
-            object_code << "\tobj_String stringTemp" << reg << strConst->getValue() << ");" << std::endl;
+            object_code << "\tobj_String stringTemp" << reg << " = str_literal(\"" << strConst->getValue() << "\");" << std::endl;
             break;
             }
         default:
