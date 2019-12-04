@@ -8,7 +8,10 @@ all:
 # not from within docker.
 
 clean:
+	rm a.out
+	rm codegen/code.c
 	(cd src; make clean)
+	
 
 image:
 	(cd src; make clean;)

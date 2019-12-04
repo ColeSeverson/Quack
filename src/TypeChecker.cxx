@@ -700,6 +700,7 @@ namespace TypeChecker {
         intMethods->insert({"PLUS", intPlus});
         Int = {NULL, "Int", "Obj", NULL, intMethods, NULL};
         std::map<std::string, struct Method *> * stringMethods = new std::map<std::string, struct Method *>();
+        stringMethods->insert({Print->name, Print});
         String = {NULL, "String", "Obj", NULL, stringMethods, NULL};
         std::map<std::string, struct Method *> * booleanMethods = new std::map<std::string, struct Method *>();
         Boolean = {NULL, "Boolean", "Obj", NULL, booleanMethods, NULL};

@@ -115,7 +115,10 @@ int main(int argc, char **argv) {
                 root->json(std::cout, context);
                 std::cout << std::endl;
             }
-            if (codegen == 1 && CodeGen::Generate(root, debug) != 0) {
+
+            CodeGenerator * codeGen = new CodeGenerator(root, debug);
+
+            if (codegen == 1 && codeGen->Generate("code.c") != 0) {
                 std::cout << "Failed to generate code" << std::endl;
                 exit(128);
             }
