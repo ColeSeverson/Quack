@@ -8,6 +8,7 @@
 #include "Messages.h"
 #include "ClassChecker.h"
 #include "TypeChecker.h"
+#include "CodeGen.h"
 
 #include <iostream>
 #include <unistd.h>  // getopt is here
@@ -53,8 +54,9 @@ int main(int argc, char **argv) {
     int type = 1;
     int trace = 0;
     int clazz = 1;
+    int codegen = 1;
 
-    while ((c = getopt(argc, argv, "tjdrc")) != -1) {
+    while ((c = getopt(argc, argv, "tjdrcg")) != -1) {
         if (c == 't') {
             std::cerr <<  "Type Checking mode disabled" << std::endl;
             type = 0;
@@ -74,6 +76,10 @@ int main(int argc, char **argv) {
         if (c == 'c') {
             std::cerr << "Class check disabled" << std::endl;
             clazz = 0;
+        }
+        if (c == 'g') {
+            std::cerr << "Code gen disabled" << std::endl;
+            codegen = 0;
         }
     }
 
@@ -108,6 +114,10 @@ int main(int argc, char **argv) {
                 AST::AST_print_context context;
                 root->json(std::cout, context);
                 std::cout << std::endl;
+            }
+            if (codegen == 1 && CodeGen::Generate(root, debug) != 0) {
+                std::cout << "Failed to generate code" << std::endl;
+                exit(128);
             }
         } else {
             std::cout << "No tree produced." << std::endl;
