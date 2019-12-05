@@ -694,6 +694,7 @@ namespace TypeChecker {
         intTimes->node = NULL;
         intTimes->table = NULL;
         intMethods->insert({"TIMES", intTimes});
+        intMethods->insert({"PRINT", Print});
         //intPlus->arguments->push_back(new struct Var());
         intPlus->node = NULL;
         intPlus->table = NULL;

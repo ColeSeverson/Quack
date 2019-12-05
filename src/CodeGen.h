@@ -4,6 +4,7 @@
 #include "ASTNode.h"
 #include <string>
 #include <fstream>
+#include <map>
 
 class CodeGenerator {
     private:
@@ -13,6 +14,7 @@ class CodeGenerator {
         int debug_level;
         int register_num;
         int label_num;
+        std::map<std::string, bool> *init_map;
 
         //private methods
         void debugPrint(std::string);
@@ -21,6 +23,7 @@ class CodeGenerator {
         void generateInitial(std::ofstream &);
         void generateMain(std::ofstream &);
         std::string generateStatement(std::ofstream &, std::string, std::string, AST::Statement *);
+        std::string generateLExpr(std::ofstream &, std::string, std::string, AST::LExpr *);
 
     public:
         CodeGenerator(AST::ASTNode * root, int debugLevel);
