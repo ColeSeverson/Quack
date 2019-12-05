@@ -8,8 +8,8 @@ all:
 # not from within docker.
 
 clean:
-	rm a.out
-	rm codegen/code.c
+	rm -f a.out
+	rm  -f codegen/code.c
 	(cd src; make clean)
 	
 
