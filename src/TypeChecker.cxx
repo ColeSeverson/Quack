@@ -32,7 +32,7 @@ namespace TypeChecker {
         struct Method *constructor;
         std::map<std::string, struct Method *> *methods;
         std::map<std::string, struct Var *> *fields;
-    } Obj, Int, String, Boolean;
+    } Obj, Int, String, Boolean, Nothing;
     //Note that you cant have methods outside of a class... So we won't use this methods
     std::map<std::string, struct Class *> classes;
     std::map<std::string, struct Var *> variables;
@@ -688,12 +688,15 @@ namespace TypeChecker {
         std::map<std::string, struct Method *> * objMethods = new std::map<std::string, struct Method *>(); //TOADD METHODS
         struct Method * Print = new struct Method();
         Print->name = "PRINT";
-        Print->returnType = "Nothing";
-        Print->table = NULL;
+        Print->returnType = "Obj";
         Print->arguments = new std::vector<struct Var *>();
-        Print->node = NULL;
-        Print->table = NULL;
         objMethods->insert({Print->name, Print});
+
+        struct Method * Equals = new struct Method();
+        Equals->name = "Equals";
+        Equals->returnType = "Boolean";
+        Equals->arguments = new std::vector<struct Var *>();
+        objMethods->insert({"EQUALS", Equals});
         Obj = {NULL, "Obj", "Nothing", NULL, objMethods, new std::map<std::string, struct Var *>()};
 
         //Int methods
@@ -702,9 +705,9 @@ namespace TypeChecker {
         intPlus->name="PLUS";
         intPlus->returnType = "Int";
         intPlus->arguments = new std::vector<struct Var *>();
-        struct Var * toAdd = new struct Var();
-        toAdd->type = "Int";
-        intPlus->arguments->push_back(toAdd);
+        struct Var * intarg = new struct Var();
+        intarg->type = "Int";
+        intPlus->arguments->push_back(intarg);
 
         struct Method * intTimes = new struct Method();
         intTimes->name = "TIMES";
@@ -717,25 +720,67 @@ namespace TypeChecker {
         intEquals->name="EQUALS";
         intEquals->returnType = "Boolean";
         intEquals->arguments = new std::vector<struct Var *>();
-        struct Var * toEqual = new struct Var();
-        toEqual->type = "Int";
-        intEquals->arguments->push_back(toEqual);
+        intEquals->arguments->push_back(intarg);
+
+        struct Method * intLess = new struct Method();
+        intLess->name="LESS";
+        intLess->returnType = "Boolean";
+        intLess->arguments = new std::vector<struct Var *>();
+        intLess->arguments->push_back(intarg);
+
+        struct Method * intStr = new struct Method();
+        intStr->name="STR";
+        intStr->returnType = "String";
+        intStr->arguments = new std::vector<struct Var *>();
 
         intMethods->insert({"EQUALS", intEquals});
         intMethods->insert({"TIMES", intTimes});
         intMethods->insert({"PRINT", Print});
         intMethods->insert({"PLUS", intPlus});
+        intMethods->insert({"LESS", intLess});
+        intMethods->insert({"Str", intStr});
         Int = {NULL, "Int", "Obj", NULL, intMethods, NULL};
 
         //String methods
         std::map<std::string, struct Method *> * stringMethods = new std::map<std::string, struct Method *>();
-        stringMethods->insert({Print->name, Print});
+        struct Var * strarg = new Var();
+        strarg->type = "String";
+
+        struct Method * strStr = new struct Method();
+        strStr->name="STR";
+        strStr->returnType = "String";
+        strStr->arguments = new std::vector<struct Var *>();
+
+        struct Method * strEquals = new struct Method();
+        strEquals->name="EQUALS";
+        strEquals->returnType = "Boolean";
+        strEquals->arguments = new std::vector<struct Var *>();
+        strEquals->arguments->push_back(strarg);
+
+        stringMethods->insert({"STR", strStr});
+        stringMethods->insert({"EQUALS", strEquals});
+        stringMethods->insert({"PRINT", Print});
+
         String = {NULL, "String", "Obj", NULL, stringMethods, NULL};
 
         //Boolean methods
         std::map<std::string, struct Method *> * booleanMethods = new std::map<std::string, struct Method *>();
+        struct Method * boolStr = new struct Method();
+        boolStr->name="STR";
+        boolStr->returnType = "String";
+        boolStr->arguments = new std::vector<struct Var *>();
+
         booleanMethods->insert({Print->name, Print});
+        booleanMethods->insert({"STR", boolStr});
         Boolean = {NULL, "Boolean", "Obj", NULL, booleanMethods, NULL};
+
+        //Nothing
+        std::map<std::string, struct Method *> * nothingMethods = new std::map<std::string, struct Method *>();
+        struct Method * nothingStr = new struct Method();
+        nothingStr->name="STR";
+        nothingStr->returnType = "String";
+        nothingStr->arguments = new std::vector<struct Var *>();
+        Nothing = {NULL, "Nothing", "Obj", NULL, nothingMethods, NULL};
         
         debugPrint("", "", "Finished adding default methods");
         //Now we will create our reference of classes to check and the valid types
@@ -743,6 +788,7 @@ namespace TypeChecker {
         classes.insert({"Int", &Int});
         classes.insert({"String", &String});
         classes.insert({"Boolean", &Boolean});
+        classes.insert({"Nothing", &Nothing});
         for(auto clazz : root->classes_.getElements()) {
             classes.insert({clazz->getName()->getText(), createClass(clazz)});
         }
@@ -776,7 +822,8 @@ namespace TypeChecker {
         for(auto name : topo) {
             struct Class * clazz = classes[name];
             if(clazz->name.compare("Obj") == 0 || clazz->name.compare("String") == 0 ||
-                clazz->name.compare("Int") == 0 || clazz->name.compare("Boolean") == 0){
+                clazz->name.compare("Int") == 0 || clazz->name.compare("Boolean") == 0
+                    || clazz->name.compare("Nothing") == 0){
                     continue;
                 }
             parseClass(clazz);

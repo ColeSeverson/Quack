@@ -22,9 +22,16 @@ class CodeGenerator {
         void debugPrint(std::string);
         int getRegisterNum() {return register_num++;};
         int getLabelNum() {return label_num++;};
+        bool isInScope(std::string, struct Scope *);
+
+        //Generators
         void generateInitial(std::ofstream &);
         void generateMain(std::ofstream &);
-        bool isInScope(std::string, struct Scope *);
+        void generateClassDecls(std::ofstream &, std::vector<AST::Class *> *);
+        void generateClass(std::ofstream &, AST::Class *);
+        void generateMethod(std::ofstream &, struct Scope *, AST::Method *);
+
+        //Generators Cont
         std::string generateStatement(std::ofstream &, std::string, std::string, struct Scope *, AST::Statement *);
         std::string generateLExpr(std::ofstream &, std::string, std::string, std::string,  struct Scope *, AST::LExpr *);
 

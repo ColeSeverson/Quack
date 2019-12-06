@@ -35,11 +35,6 @@ CodeGenerator::~CodeGenerator() {
 }
 
 //Here are methods that are only used internally
-void CodeGenerator::generateInitial(std::ofstream &object_code) {
-    debugPrint("Entering generateInitial");
-    object_code << "#include \"Builtins.h\"" << std::endl;
-}
-
 bool CodeGenerator::isInScope(std::string var, Scope * scope) {
     debugPrint("IsInScope");
     std::vector<std::string> * vec = scope->variables;
@@ -98,16 +93,27 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
         case AST::statementEnum::AND:
             {
                 debugPrint("Found an AND");
+                AST::And * and_stat = dynamic_cast<AST::And *>(statement);
+                std::string cond1 = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, and_stat->getLeft());
+                std::string cond2 = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, and_stat->getLeft());
+                return cond1 + " && " + cond2;
                 break;
             }
         case AST::statementEnum::OR:
             {
                 debugPrint("Found an OR");
+                AST::Or * or_stat = dynamic_cast<AST::Or *>(statement);
+                std::string cond1 = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, or_stat->getLeft());
+                std::string cond2 = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, or_stat->getLeft());
+                return cond1 + " || " + cond2;
                 break;
             }
         case AST::statementEnum::NOT:
             {
                 debugPrint("Found an NOT");
+                AST::Not * not_stat = dynamic_cast<AST::Not *>(statement);
+                std::string cond1 = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, not_stat->getLeft());
+                return "!" + cond1;
                 break;
             }
         case AST::statementEnum::IF:
@@ -184,6 +190,9 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
         case AST::statementEnum::RETURN:
             {
                 debugPrint("Found a RETURN");
+                AST::Return * returnstat = dynamic_cast<AST::Return *>(statement);
+                std::string toreturn = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, returnstat->getExpr());
+                object_code << "return " << toreturn << "\n";
                 break;
             }
         case AST::statementEnum::LOAD:
@@ -246,6 +255,8 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
         case AST::statementEnum::CONSTRUCT:
             {
                 debugPrint("Found an CONSTRUCTOR");
+                AST::Construct * constructor = dynamic_cast<AST::Construct *>(statement);
+                
                 break;
             }
         case AST::statementEnum::CALL:
@@ -282,6 +293,26 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
     }
     return "";
 }
+
+void generateClassDecls(std::ofstream & object_code, std::vector<AST::Class *> * classes) {
+    
+}
+
+void generateMethod(std::ofstream & object_code, struct Scope * current_scope,  AST::Method * method) {
+
+}
+
+void generateClass(std::ofstream & object_code, AST::Class * clazz) {
+
+}
+
+
+
+void CodeGenerator::generateInitial(std::ofstream &object_code) {
+    debugPrint("Entering generateInitial");
+    object_code << "#include \"Builtins.h\"" << std::endl;
+}
+
 void CodeGenerator::generateMain(std::ofstream &object_code) {
     debugPrint("Entering generateMain");
     object_code << "int main() {\n";
@@ -307,6 +338,41 @@ int CodeGenerator::Generate(std::string fileName) {
     }
 
     this->generateInitial(object_code);
+
+    //Now lets create a vector of just the user added classes
+    std::vector<AST::Class *> classes;
+    for(auto clazz : root->classes_.getElements()) {
+        std::string name = clazz->getName()->getText();
+        if(name.compare("Obj") == 0 || name.compare("Nothing") == 0
+            || name.compare("String") == 0 || name.compare("Int") == 0
+                || name.compare("Boolean") == 0)
+            continue;  
+        classes.push_back(clazz);
+    }
+    
+    /*
+    std::vector<std::string> classes_topo;
+    classes_topo.push_back("Nothing");
+    classes_topo.push_back("Obj");
+
+    while(classes.size() > 0) {
+        for(int i = 0; i < classes.size(); i++) {
+            auto clazz = classes[i];
+            if(std::find(classes_topo.begin(), classes_topo.end(), clazz->getSuper()->getText()) != classes_topo.end()) {
+                //if the super is in the list
+                classes_topo.push_back(clazz->getName()->getText());
+                classes.erase(classes.begin() + i);
+            }
+        }
+    }
+    */
+    //Now classes_topo is a topologically (sort of) sorted list of class names that we will use to generate the forward decls
+    CodeGenerator::generateClassDecls(object_code, &classes);
+    for(auto clazz : classes) {
+        CodeGenerator::generateClass(object_code, clazz);
+    }
+
+
     this->generateMain(object_code);
 
     object_code << "\n\n";

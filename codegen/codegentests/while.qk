@@ -1,11 +1,8 @@
 x = 5;
 y = 1;
 
-while(x == 5) {
+while(x < 10) {
     x = x + y;
-    "   ".PRINT();
-    x.PRINT();
-    (x == 5).PRINT();
 }
 
 x.PRINT();
