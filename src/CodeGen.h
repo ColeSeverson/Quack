@@ -24,8 +24,9 @@ class CodeGenerator {
         int getLabelNum() {return label_num++;};
         void generateInitial(std::ofstream &);
         void generateMain(std::ofstream &);
+        bool isInScope(std::string, struct Scope *);
         std::string generateStatement(std::ofstream &, std::string, std::string, struct Scope *, AST::Statement *);
-        std::string generateLExpr(std::ofstream &, std::string, std::string, struct Scope *, AST::LExpr *);
+        std::string generateLExpr(std::ofstream &, std::string, std::string, std::string,  struct Scope *, AST::LExpr *);
 
     public:
         CodeGenerator(AST::ASTNode * root, int debugLevel);

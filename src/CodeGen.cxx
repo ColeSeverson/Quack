@@ -40,8 +40,22 @@ void CodeGenerator::generateInitial(std::ofstream &object_code) {
     object_code << "#include \"Builtins.h\"" << std::endl;
 }
 
+bool CodeGenerator::isInScope(std::string var, Scope * scope) {
+    debugPrint("IsInScope");
+    std::vector<std::string> * vec = scope->variables;
+    if(std::find(vec->begin(), vec->end(), var) != vec->end()) {
+        return true;
+    } else {
+        if(scope->parent_scope == NULL) {
+            return false;
+        } else {
+            return isInScope(var, scope->parent_scope);
+        }
+    }
+}
+
 //For LEXPR this needs class and method for context to pass to and rexpr that must be evaled
-std::string CodeGenerator::generateLExpr(std::ofstream &object_code, std::string method, std::string clazz, Scope * current_scope, AST::LExpr *lexpr) {
+std::string CodeGenerator::generateLExpr(std::ofstream &object_code, std::string type, std::string clazz, std::string method, Scope * current_scope, AST::LExpr *lexpr) {
     //Here we need to handle x.y or this.y or x
     int reg;
     switch(lexpr->getType()) {
@@ -49,6 +63,13 @@ std::string CodeGenerator::generateLExpr(std::ofstream &object_code, std::string
             {
                 debugPrint("Found a Ident");
                 AST::Ident * ident = dynamic_cast<AST::Ident *>(lexpr);
+
+                std::vector<std::string> * vec = current_scope->variables;
+                if(!CodeGenerator::isInScope(ident->getText(), current_scope)) {
+                    object_code << "obj_" << type << " ";
+                    vec->push_back(ident->getText());
+                }
+
                 return ident->getText();
                 break;
             }
@@ -92,6 +113,43 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
         case AST::statementEnum::IF:
             {
                 debugPrint("Found an IF");
+                AST::If * iff = dynamic_cast<AST::If *>(statement);
+                //First things first lets get the temp variable that will contain the condition
+                std::string condition = CodeGenerator::generateStatement(object_code, method, clazz,  current_scope, iff->getCondition());
+                //Now lets generate the if
+                debugPrint("Generating true section");
+                object_code << "if (" << condition << " == lit_true" << " ) {\n";
+                Scope true_scope;
+                true_scope.parent_scope = current_scope;
+                true_scope.variables = new std::vector<std::string>();
+                for(auto true_node : iff->getTrueBlock()->getElements()) {
+                    AST::Statement * true_statement = dynamic_cast<AST::Statement *>(true_node);
+                    CodeGenerator::generateStatement(object_code, method, clazz,  &true_scope, true_statement);
+                }
+            
+                if(iff->getFalseBlock()) {
+                    debugPrint("Generating False section");
+                    object_code << "} else {\n";
+                    Scope false_scope;
+                    false_scope.parent_scope = current_scope;
+                    false_scope.variables = new std::vector<std::string>();
+                    for(auto false_node : iff->getFalseBlock()->getElements()) {
+                        AST::Statement * false_statement = dynamic_cast<AST::Statement *>(false_node);
+                        CodeGenerator::generateStatement(object_code, method, clazz,  &false_scope, false_statement);
+                    }
+
+                    //Now we will check for variables defined in both!
+                    for(auto false_var : *false_scope.variables) {
+                        auto vec = true_scope.variables;
+                        if(std::find(vec->begin(), vec->end(), false_var) != vec->end()) {
+                            current_scope->variables->push_back(false_var);
+                        }
+                    }
+
+                    delete(false_scope.variables);
+                }
+                object_code << "}\n";
+                delete(true_scope.variables);
 
 
                 return "";
@@ -100,7 +158,26 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
         case AST::statementEnum::WHILE:
             {
                 debugPrint("Found an WHILE");
+                AST::While * whilestat = dynamic_cast<AST::While *>(statement);
 
+                std::string condition = CodeGenerator::generateStatement(object_code, method, clazz,  current_scope, whilestat->getCondition());
+
+                object_code << "while (" << condition << " == lit_true" << ") {\n";
+
+                Scope while_scope;
+                while_scope.parent_scope = current_scope;
+                while_scope.variables = new std::vector<std::string>();
+                for(auto node : whilestat->getBody()->getElements()) {
+                    AST::Statement * while_statement = dynamic_cast<AST::Statement *>(node);
+                    CodeGenerator::generateStatement(object_code, method, clazz,  &while_scope, while_statement);
+                }
+
+                std::string update_condition = CodeGenerator::generateStatement(object_code, method, clazz,  current_scope, whilestat->getCondition());
+                object_code << condition << " = " << update_condition << ";\n";
+
+                object_code << "}\n";
+
+                delete(while_scope.variables);
                 return "";
                 break;
             }
@@ -113,7 +190,7 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
             {
                 debugPrint("Found a Load");
                 AST::Load * load = dynamic_cast<AST::Load *>(statement);
-                return CodeGenerator::generateLExpr(object_code, method, clazz, current_scope, load->getLocation());
+                return CodeGenerator::generateLExpr(object_code, "", method, clazz,  current_scope, load->getLocation());
                 break;
             }
         case AST::statementEnum::ASSIGNDECLARE:
@@ -123,14 +200,9 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
                 AST::AssignDeclare * assign = dynamic_cast<AST::AssignDeclare *>(statement);
                 std::string type = assign->getExpr()->typeAnnotation;
                 std::string rexpr = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, assign->getExpr());
-                std::string lexpr = CodeGenerator::generateLExpr(object_code, method, clazz, current_scope, assign->getLexpr());
+                std::string lexpr = CodeGenerator::generateLExpr(object_code, type, method, clazz, current_scope, assign->getLexpr());
 
                 //Check if the value is already initialized or not
-                std::vector<std::string> * vec = current_scope->variables;
-                if(std::find(vec->begin(), vec->end(), lexpr) == vec->end()) {
-                    object_code << "obj_" << type << " ";
-                    vec->push_back(lexpr);
-                }
 
                 object_code << lexpr << " = " << rexpr << ";\n";
 
@@ -144,14 +216,9 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
                 AST::Assign * assign = dynamic_cast<AST::Assign *>(statement);
                 std::string type = assign->getExpr()->typeAnnotation;
                 std::string rexpr = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, assign->getExpr());
-                std::string lexpr = CodeGenerator::generateLExpr(object_code, method, clazz, current_scope, assign->getLexpr());
+                std::string lexpr = CodeGenerator::generateLExpr(object_code, type, method, clazz, current_scope, assign->getLexpr());
 
                 //Check if the value is already initialized or not
-                std::vector<std::string> * vec = current_scope->variables;
-                if(std::find(vec->begin(), vec->end(), lexpr) == vec->end()) {
-                    object_code << "obj_" << type << " ";
-                    vec->push_back(lexpr);
-                }
                 object_code << lexpr << " = " << rexpr << ";\n";
 
                 return "";
@@ -175,6 +242,7 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
                 return ("temp" + std::to_string(reg));
                 break;
             }
+        //This will have to use malloc
         case AST::statementEnum::CONSTRUCT:
             {
                 debugPrint("Found an CONSTRUCTOR");
@@ -188,6 +256,7 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
                 std::string obj = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, call->getReciever());
                 std::string method = call->getMethod()->getText();
                 std::string returnType = call->typeAnnotation;
+                debugPrint("    Method: " + method + " return: " + returnType);
                 //TODO add actuals
                 std::vector<std::string> actuals;
                 for(auto actual : call->getArgs()->getElements()) {

@@ -425,16 +425,22 @@ namespace TypeChecker {
             stat->typeAnnotation = temp->returnType;
             return temp->returnType;
         }else if (stat->getType() == AST::statementEnum::IF) {
-            debugPrint(clazz->name, method->name, "Found an if");
+            debugPrint(clazz->name, method->name, "Found an if " + method->name + " " + clazz->name);
             //first things first lets make two copies of the method->table
+            
             std::map<std::string, struct Var *> *ttrue = new std::map<std::string, struct Var *>(*method->table);
             std::map<std::string, struct Var *> *tfalse = new std::map<std::string, struct Var *>(*method->table);
-
             std::map<std::string, struct Var *> *fieldstrue = new std::map<std::string, struct Var *>(*clazz->fields);
             std::map<std::string, struct Var *> *fieldsfalse = new std::map<std::string, struct Var *>(*clazz->fields);
-            
-
+                    
+                       
+            debugPrint(clazz->name, method->name, "Finished declaring temp fields and tables");
             AST::If * ifstat = dynamic_cast<AST::If *>(stat);
+
+            if (parseExpr(clazz, method, ifstat->getCondition()).compare("Boolean") != 0) {
+                report::error("Condition for if is not a boolean type");
+                exit(124);
+            } 
             //first we will swap in the true map and parse the true section
             delete(method->table);
             method->table = ttrue;
@@ -444,6 +450,7 @@ namespace TypeChecker {
                 AST::Statement *expr = dynamic_cast<AST::Statement *>(stat);
                 parseExpr(clazz, method, expr);
             }
+            debugPrint(clazz->name, method->name, "True Section parsed");
 
             method->table = tfalse;
             clazz->fields = fieldsfalse;
@@ -453,9 +460,14 @@ namespace TypeChecker {
                     parseExpr(clazz, method, expr);
                 }
             }
+            debugPrint(clazz->name, method->name, "False Section parsed");
             //Now we check intersection
             method->table = intersect(tfalse, ttrue);
             clazz->fields = intersect(fieldstrue, fieldsfalse);
+            delete(ttrue);
+            delete(tfalse);
+            delete(fieldsfalse);
+            delete(fieldstrue);
             return "Nothing";
 
         }else if (stat->getType() == AST::statementEnum::WHILE) {
@@ -468,6 +480,11 @@ namespace TypeChecker {
             auto tempfields = clazz->fields;
             method->table = ttrue;
             clazz->fields = fieldtrue;
+
+            if (parseExpr(clazz, method, whilestat->getCondition()).compare("Boolean") != 0) {
+                report::error("Condition for while is not a boolean type");
+                exit(124);
+            } 
 
             for(auto expr : whilestat->getBody()->getElements()) {
                 AST::Statement * stat = dynamic_cast<AST::Statement *>(expr);
@@ -679,6 +696,7 @@ namespace TypeChecker {
         objMethods->insert({Print->name, Print});
         Obj = {NULL, "Obj", "Nothing", NULL, objMethods, new std::map<std::string, struct Var *>()};
 
+        //Int methods
         std::map<std::string, struct Method *> * intMethods = new std::map<std::string, struct Method *>(); //TOADD METHODS
         struct Method * intPlus = new struct Method();
         intPlus->name="PLUS";
@@ -687,23 +705,36 @@ namespace TypeChecker {
         struct Var * toAdd = new struct Var();
         toAdd->type = "Int";
         intPlus->arguments->push_back(toAdd);
+
         struct Method * intTimes = new struct Method();
         intTimes->name = "TIMES";
         intTimes->returnType = "Int";
         intTimes->arguments = intPlus->arguments;
         intTimes->node = NULL;
         intTimes->table = NULL;
+
+        struct Method * intEquals = new struct Method();
+        intEquals->name="EQUALS";
+        intEquals->returnType = "Boolean";
+        intEquals->arguments = new std::vector<struct Var *>();
+        struct Var * toEqual = new struct Var();
+        toEqual->type = "Int";
+        intEquals->arguments->push_back(toEqual);
+
+        intMethods->insert({"EQUALS", intEquals});
         intMethods->insert({"TIMES", intTimes});
         intMethods->insert({"PRINT", Print});
-        //intPlus->arguments->push_back(new struct Var());
-        intPlus->node = NULL;
-        intPlus->table = NULL;
         intMethods->insert({"PLUS", intPlus});
         Int = {NULL, "Int", "Obj", NULL, intMethods, NULL};
+
+        //String methods
         std::map<std::string, struct Method *> * stringMethods = new std::map<std::string, struct Method *>();
         stringMethods->insert({Print->name, Print});
         String = {NULL, "String", "Obj", NULL, stringMethods, NULL};
+
+        //Boolean methods
         std::map<std::string, struct Method *> * booleanMethods = new std::map<std::string, struct Method *>();
+        booleanMethods->insert({Print->name, Print});
         Boolean = {NULL, "Boolean", "Obj", NULL, booleanMethods, NULL};
         
         debugPrint("", "", "Finished adding default methods");
@@ -754,8 +785,9 @@ namespace TypeChecker {
         debugPrint("", "", "Finished parsing the classes");
 
         std::map<std::string, struct Var *> *scopeVariables = new std::map<std::string, struct Var *>();
-        struct Method fakeMethod = {NULL, "ProgramLevelFakeMethod", NULL, scopeVariables, "Nothing"};
-        struct Class fakeClazz = {NULL, "GLobal", "Nothing", NULL, NULL, NULL};
+        std::map<std::string, struct Var *> *fieldVariables = new std::map<std::string, struct Var *>();
+        struct Method fakeMethod = {NULL, "GlobalFakeMethod", NULL, scopeVariables, "Nothing"};
+        struct Class fakeClazz = {NULL, "Global", "Nothing", NULL, NULL, fieldVariables};
         for(auto node : root->statements_.getElements()) {
             AST::Statement * statement = dynamic_cast<AST::Statement *>(node);
             parseExpr(&fakeClazz, &fakeMethod,  statement);
