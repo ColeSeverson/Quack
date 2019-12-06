@@ -4,6 +4,14 @@
 #include "ASTNode.h"
 #include "Messages.h"
 
+//This is how we will determine if a variable was already declared or not
+struct CodeGenerator::Scope {
+    struct CodeGenerator::Scope * parent_scope;
+    std::vector<std::string> * variables;
+}program_scope;
+
+typedef struct Scope Scope;
+
 void CodeGenerator::debugPrint(std::string statement) {
     if (debug_level == 1) {
         std::cout << "CodeGen: " << statement << std::endl;
@@ -15,7 +23,10 @@ CodeGenerator::CodeGenerator(AST::ASTNode * root, int debugLevel) {
     this->debug_level = debugLevel;
     this->register_num = 0;
     this->label_num = 0;
-    this->init_map = new std::map<std::string, bool>();
+
+    //Instantiate the 'global' scope
+    program_scope.variables = new std::vector<std::string>();
+    program_scope.parent_scope = NULL;
     debugPrint("Finished constructing the CodeGenerator");
 }
 CodeGenerator::~CodeGenerator() {
@@ -30,7 +41,7 @@ void CodeGenerator::generateInitial(std::ofstream &object_code) {
 }
 
 //For LEXPR this needs class and method for context to pass to and rexpr that must be evaled
-std::string CodeGenerator::generateLExpr(std::ofstream &object_code, std::string method, std::string clazz, AST::LExpr *lexpr) {
+std::string CodeGenerator::generateLExpr(std::ofstream &object_code, std::string method, std::string clazz, Scope * current_scope, AST::LExpr *lexpr) {
     //Here we need to handle x.y or this.y or x
     int reg;
     switch(lexpr->getType()) {
@@ -45,7 +56,7 @@ std::string CodeGenerator::generateLExpr(std::ofstream &object_code, std::string
             {
                 debugPrint("Found a DOT");
                 AST::Dot * dot = dynamic_cast<AST::Dot *>(lexpr);
-                std::string left = CodeGenerator::generateStatement(object_code, method, clazz, dot->getLeft());
+                std::string left = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, dot->getLeft());
                 std::string right = dot->getRight()->getText();
                 return (left + "->" + right);
                 break;
@@ -59,21 +70,72 @@ std::string CodeGenerator::generateLExpr(std::ofstream &object_code, std::string
 }
 
 //This should return the name of the generated value
-std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::string method, std::string clazz, AST::Statement *statement) {
+std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::string method, std::string clazz, struct Scope * current_scope, AST::Statement *statement) {
     int reg;
     switch(statement->getType()) {
         //first come the concrete types
+        case AST::statementEnum::AND:
+            {
+                debugPrint("Found an AND");
+                break;
+            }
+        case AST::statementEnum::OR:
+            {
+                debugPrint("Found an OR");
+                break;
+            }
+        case AST::statementEnum::NOT:
+            {
+                debugPrint("Found an NOT");
+                break;
+            }
+        case AST::statementEnum::IF:
+            {
+                debugPrint("Found an IF");
+
+
+                return "";
+                break;
+            }
+        case AST::statementEnum::WHILE:
+            {
+                debugPrint("Found an WHILE");
+
+                return "";
+                break;
+            }
+        case AST::statementEnum::RETURN:
+            {
+                debugPrint("Found a RETURN");
+                break;
+            }
         case AST::statementEnum::LOAD:
             {
                 debugPrint("Found a Load");
                 AST::Load * load = dynamic_cast<AST::Load *>(statement);
-                return CodeGenerator::generateLExpr(object_code, method, clazz, load->getLocation());
+                return CodeGenerator::generateLExpr(object_code, method, clazz, current_scope, load->getLocation());
                 break;
             }
         case AST::statementEnum::ASSIGNDECLARE:
             {
                 debugPrint("Found an AssignDeclare");
                 //TODO implement
+                AST::AssignDeclare * assign = dynamic_cast<AST::AssignDeclare *>(statement);
+                std::string type = assign->getExpr()->typeAnnotation;
+                std::string rexpr = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, assign->getExpr());
+                std::string lexpr = CodeGenerator::generateLExpr(object_code, method, clazz, current_scope, assign->getLexpr());
+
+                //Check if the value is already initialized or not
+                std::vector<std::string> * vec = current_scope->variables;
+                if(std::find(vec->begin(), vec->end(), lexpr) == vec->end()) {
+                    object_code << "obj_" << type << " ";
+                    vec->push_back(lexpr);
+                }
+
+                object_code << lexpr << " = " << rexpr << ";\n";
+
+                return "";
+                break;
             }
         case AST::statementEnum::ASSIGN:
             {
@@ -81,14 +143,14 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
                 debugPrint("Found an Assign");
                 AST::Assign * assign = dynamic_cast<AST::Assign *>(statement);
                 std::string type = assign->getExpr()->typeAnnotation;
-                std::string rexpr = CodeGenerator::generateStatement(object_code, method, clazz, assign->getExpr());
-                std::string lexpr = CodeGenerator::generateLExpr(object_code, method, clazz, assign->getLexpr());
+                std::string rexpr = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, assign->getExpr());
+                std::string lexpr = CodeGenerator::generateLExpr(object_code, method, clazz, current_scope, assign->getLexpr());
 
                 //Check if the value is already initialized or not
-                auto iterator = init_map->find(method + lexpr);
-                if(iterator == init_map->end()) {
-                    //IE it hasnt yet we should add this statments to the init_map first
+                std::vector<std::string> * vec = current_scope->variables;
+                if(std::find(vec->begin(), vec->end(), lexpr) == vec->end()) {
                     object_code << "obj_" << type << " ";
+                    vec->push_back(lexpr);
                 }
                 object_code << lexpr << " = " << rexpr << ";\n";
 
@@ -113,18 +175,23 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
                 return ("temp" + std::to_string(reg));
                 break;
             }
+        case AST::statementEnum::CONSTRUCT:
+            {
+                debugPrint("Found an CONSTRUCTOR");
+                break;
+            }
         case AST::statementEnum::CALL:
             {
                 //Call needs to return a temp value containing the value created from the function call
                 debugPrint("Found an CALL");
                 AST::Call * call = dynamic_cast<AST::Call *>(statement);
-                std::string obj = CodeGenerator::generateStatement(object_code, method, clazz, call->getReciever());
+                std::string obj = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, call->getReciever());
                 std::string method = call->getMethod()->getText();
                 std::string returnType = call->typeAnnotation;
                 //TODO add actuals
                 std::vector<std::string> actuals;
                 for(auto actual : call->getArgs()->getElements()) {
-                    actuals.push_back(CodeGenerator::generateStatement(object_code, method, clazz, actual));
+                    actuals.push_back(CodeGenerator::generateStatement(object_code, method, clazz, current_scope, actual));
                 }
 
                 reg = this->getRegisterNum();
@@ -152,7 +219,7 @@ void CodeGenerator::generateMain(std::ofstream &object_code) {
 
     for(auto node : root->statements_.getElements()) {
         AST::Statement * statement = dynamic_cast<AST::Statement *>(node);
-        generateStatement(object_code, "", "Main", statement);
+        generateStatement(object_code, "", "Main", &program_scope, statement);
     }
 
     object_code << "}";

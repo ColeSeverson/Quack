@@ -14,7 +14,9 @@ class CodeGenerator {
         int debug_level;
         int register_num;
         int label_num;
-        std::map<std::string, bool> *init_map;
+        
+        //Structs
+        struct Scope;
 
         //private methods
         void debugPrint(std::string);
@@ -22,8 +24,8 @@ class CodeGenerator {
         int getLabelNum() {return label_num++;};
         void generateInitial(std::ofstream &);
         void generateMain(std::ofstream &);
-        std::string generateStatement(std::ofstream &, std::string, std::string, AST::Statement *);
-        std::string generateLExpr(std::ofstream &, std::string, std::string, AST::LExpr *);
+        std::string generateStatement(std::ofstream &, std::string, std::string, struct Scope *, AST::Statement *);
+        std::string generateLExpr(std::ofstream &, std::string, std::string, struct Scope *, AST::LExpr *);
 
     public:
         CodeGenerator(AST::ASTNode * root, int debugLevel);
