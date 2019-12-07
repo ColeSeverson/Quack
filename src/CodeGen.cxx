@@ -367,10 +367,10 @@ int CodeGenerator::Generate(std::string fileName) {
     }
     */
     //Now classes_topo is a topologically (sort of) sorted list of class names that we will use to generate the forward decls
-    CodeGenerator::generateClassDecls(object_code, &classes);
+    /*CodeGenerator::generateClassDecls(object_code, &classes);
     for(auto clazz : classes) {
         CodeGenerator::generateClass(object_code, clazz);
-    }
+    }*/
 
 
     this->generateMain(object_code);

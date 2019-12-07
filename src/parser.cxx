@@ -105,7 +105,8 @@ int main(int argc, char **argv) {
 	        }
 
             //now for types
-            if (type == 1 && TypeChecker::Check(root, debug) != 0) {
+            TypeChecker::Check(root, debug);
+            if (type == 1) {
                 std::cout << "Failed the type checker terminating..." << std::endl;
                 exit(32);
             }

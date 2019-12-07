@@ -2,9 +2,13 @@
 #define TYPECHECKER
 
 #include "ASTNode.h"
+#include <map>
 
 namespace TypeChecker {
-    int Check(AST::ASTNode *root_, int debug);
+        struct Var;
+        struct Class;
+        struct Method;
+        int Check(AST::ASTNode *root_, int debug);
 }
 
 #endif

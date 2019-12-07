@@ -682,6 +682,7 @@ namespace TypeChecker {
     int Check(AST::ASTNode *root_, int debug) {
         debugLevel = debug;
         debugPrint("", "", "Entering Check method");
+
         //caste the root
         AST::Program *root = dynamic_cast<AST::Program *>(root_);   
         //we need the base classes for Obj, Int, String, Bool as well as the base methods that these base classes have as well
