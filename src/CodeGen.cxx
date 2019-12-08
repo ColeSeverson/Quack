@@ -337,7 +337,36 @@ void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
             object_code << "\tobj_" << field_type << " " << field_name << ";\n";
         }
 
-        object_code << "} * obj_" << class_name << ";\n";
+        object_code << "} * obj_" << class_name << ";\n\n\n";
+
+        object_code << "struct class_" << class_name << "struct {\n";
+        for(auto method_pair : *(pair.second->methods)) {
+            std::string method_name;
+            if(method_pair.first.compare(class_name) == 0) {
+                method_name = "constructor";
+            }else {
+                method_name = method_pair.first;
+            }
+            std::string method_return = method_pair.second->returnType;
+            std::vector<Var *> * method_args = method_pair.second->arguments;
+            object_code << "\tobj_" << method_return << " (*" << method_name << ") (";
+            
+            int i = 0;
+            for(auto arg : *method_args) {
+                if(i == 0) {
+                std::string arg_type = arg->type;
+                object_code << "obj_" << arg_type << " ";
+                ++i;
+                } else {
+                    std::string arg_type = arg->type;
+                    object_code << ", obj_" << arg_type << " ";
+                }
+            }
+            object_code << ");\n";
+        }
+        object_code << "};\n\n";
+
+        object_code << "extern class_" << class_name << " the_class_" << class_name << ";\n\n";
     }
 }
 void CodeGenerator::generateMethod(std::ofstream & object_code, struct Scope * current_scope,  AST::Method * method) {
