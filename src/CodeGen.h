@@ -35,6 +35,7 @@ class CodeGenerator {
         void generateClassMethods(std::ofstream &, struct Structs::Class *);
         void generateConstructor(std::ofstream &, struct Structs::Class *);
         void generateClass(std::ofstream &, struct Structs::Class *);
+        void bindClassMethods(std::ofstream &, struct Structs::Class *);
 
         //Generators Cont
         std::string generateStatement(std::ofstream &, std::string, std::string, struct Scope *, AST::Statement *);

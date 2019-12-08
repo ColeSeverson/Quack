@@ -268,23 +268,23 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
                 AST::Construct * constructor = dynamic_cast<AST::Construct *>(statement);
                 
                 std::string class_name = constructor->getName()->getText();
-                std::string to_return = "new_" + class_name + "(";
-
+                reg = this->getRegisterNum();
+                 
                 //now we parse the arguments
                 int i = 0;
+                std::string args = "";
                 for(auto actual : constructor->getArgs()->getElements()) {
                     AST::Statement * statement = dynamic_cast<AST::Statement *>(actual);
                     std::string arg_name = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, statement);
                     if (i == 0) {
-                        to_return = to_return + arg_name;
+                        args += arg_name;
                         i++;
                     } else {
-                        to_return = to_return + ", " + arg_name;
+                        args += ", " + arg_name;
                     }
                 }
-
-                to_return = to_return + ")";
-                return to_return;
+                object_code << "obj_" << class_name << " temp" << reg << " = new_" << class_name <<"(" + args + ");\n";
+                return "temp" + std::to_string(reg);
                 break;
             }
         case AST::statementEnum::CALL:
@@ -367,6 +367,9 @@ void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
 
         object_code << "struct class_" << class_name << "_struct {\n";
 
+        //super reference
+        object_code << "\tclass_" << pair.second->super << " super_;\n";
+
         //First thing we need is the constructor
         object_code << "\tobj_" << class_name << " (*constructor) (";
         std::vector<Var *> *constructor_args = pair.second->constructor->arguments;
@@ -383,7 +386,7 @@ void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
             }
         }
         object_code << ");\n";
-        //Rest of the methods
+        //Rest of the methods WE NEED TO MAKE SURE THERE IS A THIS POINTER IN EACH
         for(auto method_pair : *(pair.second->methods)) {
             std::string method_name;
             if(method_pair.first.compare(class_name) == 0) {
@@ -395,16 +398,10 @@ void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
             std::vector<Var *> * method_args = method_pair.second->arguments;
             object_code << "\tobj_" << method_return << " (*" << method_name << ") (";
             
-            int i = 0;
+            object_code << "obj_" << method_pair.second->originClass << "";
             for(auto arg : *method_args) {
-                if(i == 0) {
                 std::string arg_type = arg->type;
-                object_code << "obj_" << arg_type << " ";
-                ++i;
-                } else {
-                    std::string arg_type = arg->type;
-                    object_code << ", obj_" << arg_type << " ";
-                }
+                object_code << ", obj_" << arg_type << " ";
             }
             object_code << ");\n";
         }
@@ -479,10 +476,24 @@ void CodeGenerator::generateClassMethods(std::ofstream & object_code, Class * cu
     }
 }
 
+//To bind the methods
+void CodeGenerator::bindClassMethods(std::ofstream & object_code, Class * current_class) {
+    std::string class_name = current_class->name;
+    Class * super = (*this->classes_map)[current_class->super];
+    object_code << "the_class_" << class_name << " = {\n";
+    //now we define the method pointers
+    object_code << "the_class_" << super->name << ",\n";
+    object_code << "};\n";
+}
+
+
+
 //Generate the classes
 void CodeGenerator::generateClass(std::ofstream & object_code, Class * current_class) {
     debugPrint("Entering generateClass");
     this->generateConstructor(object_code, current_class);
+    this->generateClassMethods(object_code, current_class);
+    this->bindClassMethods(object_code, current_class);
 }
 
 void CodeGenerator::generateInitial(std::ofstream &object_code) {
@@ -553,7 +564,6 @@ int CodeGenerator::Generate(std::string fileName) {
             continue;
         }
         this->generateClass(object_code, pair.second);
-        this->generateClassMethods(object_code, pair.second);
     }
 
     this->generateMain(object_code);

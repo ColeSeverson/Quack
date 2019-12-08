@@ -657,7 +657,8 @@ namespace TypeChecker {
                 exit(32);
             }
              Method * method = pair.second;
-            parseMethod(input, method);
+             method->originClass = input->name;
+             parseMethod(input, method);
         }
         for(auto inh : inherited) {
             input->methods->insert({inh->name, inh});
@@ -698,14 +699,23 @@ namespace TypeChecker {
         Method * Print = new  Method();
         Print->name = "PRINT";
         Print->returnType = "Obj";
+        Print->originClass = "Obj";
         Print->arguments = new std::vector< Var *>();
         objMethods->insert({Print->name, Print});
+
+        Method * Str = new Method();
+        Str->name = "STR";
+        Str->returnType = "String";
+        Str->originClass = "Obj";
+        Str->arguments = new std::vector<Var *>();
+        objMethods->insert({"STR", Str});
 
         Var * objArg = new Var();
         objArg->type = "Obj";
         Method * Equals = new  Method();
         Equals->name = "EQUALS";
         Equals->returnType = "Boolean";
+        Equals->originClass = "Obj";
 
         std::vector<Var *> *objEqualsArgs = new std::vector<Var *>();
         objEqualsArgs->push_back(objArg);
@@ -727,6 +737,7 @@ namespace TypeChecker {
         intPlus->arguments = new std::vector< Var *>();
          Var * intarg = new  Var();
         intarg->type = "Int";
+        intPlus->originClass = "Int";
         intPlus->arguments->push_back(intarg);
 
          Method * intTimes = new  Method();
@@ -735,29 +746,34 @@ namespace TypeChecker {
         intTimes->arguments = intPlus->arguments;
         intTimes->node = NULL;
         intTimes->table = NULL;
+        intTimes->originClass = "Int";
 
          Method * intEquals = new  Method();
         intEquals->name="EQUALS";
         intEquals->returnType = "Boolean";
         intEquals->arguments = new std::vector< Var *>();
         intEquals->arguments->push_back(intarg);
+        intEquals->originClass = "Int";
 
          Method * intLess = new  Method();
         intLess->name="LESS";
         intLess->returnType = "Boolean";
         intLess->arguments = new std::vector< Var *>();
         intLess->arguments->push_back(intarg);
+        intLess->originClass = "Int";
 
         Method * intGreater = new Method();
         intGreater->name = "GREATER";
         intGreater->returnType = "Boolean";
         intGreater->arguments = new std::vector< Var *>();
         intGreater->arguments->push_back(intarg);
+        intGreater->originClass = "Int";
 
          Method * intStr = new  Method();
         intStr->name="STR";
         intStr->returnType = "String";
         intStr->arguments = new std::vector< Var *>();
+        intStr->originClass = "Int";
 
         intMethods->insert({"EQUALS", intEquals});
         intMethods->insert({"TIMES", intTimes});
@@ -782,16 +798,24 @@ namespace TypeChecker {
         strStr->name="STR";
         strStr->returnType = "String";
         strStr->arguments = new std::vector< Var *>();
+        strStr->originClass = "String";
 
-         Method * strEquals = new  Method();
+        Method * strEquals = new  Method();
         strEquals->name="EQUALS";
         strEquals->returnType = "Boolean";
         strEquals->arguments = new std::vector< Var *>();
         strEquals->arguments->push_back(strarg);
+        strEquals->originClass = "String";
+
+        Method * strPrint = new Method();
+        strPrint->name = "PRINT";
+        strPrint->returnType = "Nothing";
+        strPrint->arguments = new std::vector<Var *>();
+        strPrint->originClass = "String";
 
         stringMethods->insert({"STR", strStr});
         stringMethods->insert({"EQUALS", strEquals});
-        stringMethods->insert({"PRINT", Print});
+        stringMethods->insert({"PRINT", strPrint});
 
         Class * String = new Class();
         String->name = "String";
@@ -805,8 +829,15 @@ namespace TypeChecker {
         boolStr->name="STR";
         boolStr->returnType = "String";
         boolStr->arguments = new std::vector< Var *>();
+        boolStr->originClass = "Boolean";
 
-        booleanMethods->insert({Print->name, Print});
+        Method * boolPrint = new Method();
+        boolPrint->name = "PRINT";
+        boolPrint->returnType = "Nothing";
+        boolPrint->arguments = new std::vector<Var *>();
+        boolPrint->originClass = "Boolean";
+
+        booleanMethods->insert({"PRINT", boolPrint});
         booleanMethods->insert({"STR", boolStr});
         Class * Boolean = new Class();
         Boolean->name = "Boolean";
@@ -820,7 +851,9 @@ namespace TypeChecker {
         nothingStr->name="STR";
         nothingStr->returnType = "String";
         nothingStr->arguments = new std::vector< Var *>();
+        nothingStr->originClass = "Nothing";
         nothingMethods->insert({"STR", nothingStr});
+
         Class * Nothing = new Class();
         Nothing->name = "Nothing";
         Nothing->super = "Obj";

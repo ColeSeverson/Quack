@@ -20,6 +20,7 @@ namespace Structs {
         std::vector<struct Var *> * arguments;
         std::map<std::string, struct Var *> *table;
         std::string returnType;
+        std::string originClass;
     };
     struct Class {
         AST::Class * node;
