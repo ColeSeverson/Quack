@@ -30,6 +30,7 @@ namespace Structs {
         std::map<std::string, struct Method *> *methods;
         std::map<std::string, struct Var *> *fields;
         std::vector<std::string> *inherited;
+        std::vector<struct Method *> * orderedMethods;
     };
 }
 

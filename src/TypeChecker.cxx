@@ -129,6 +129,7 @@ namespace TypeChecker {
             methods->insert({method->getName()->getText(), createMethod(method)});
         }
         output->inherited = new std::vector<std::string>();
+        output->orderedMethods = new std::vector<Method *>();
         output->methods = methods;
         return output;
     }
@@ -249,6 +250,7 @@ namespace TypeChecker {
     }
     std::map<std::string,  Var *> * intersect(std::map<std::string,  Var *> * one, std::map<std::string,  Var *> * two) {
         std::map<std::string,  Var *> *output = new std::map<std::string,  Var *>();
+        debugPrint("", "", "Entering the intersect method");
         for(const auto& pair : *one) {
              Var * in = new  Var();
             in->name = pair.second->name;
@@ -447,9 +449,9 @@ namespace TypeChecker {
                 exit(124);
             } 
             //first we will swap in the true map and parse the true section
-            delete(method->table);
+            auto tempFields = clazz->fields;
+            auto tempTable = method->table;
             method->table = ttrue;
-            delete(clazz->fields);
             clazz->fields = fieldstrue;
             for(const auto& stat : ifstat->getTrueBlock()->getElements()) {
                 AST::Statement *expr = dynamic_cast<AST::Statement *>(stat);
@@ -464,11 +466,15 @@ namespace TypeChecker {
                     AST::Statement *expr = dynamic_cast<AST::Statement *>(stat);
                     parseExpr(clazz, method, expr);
                 }
+                method->table = intersect(tfalse, ttrue);
+                clazz->fields = intersect(fieldstrue, fieldsfalse);
+            } else {
+                method->table = tempTable;
+                clazz->fields = tempFields;
             }
             debugPrint(clazz->name, method->name, "False Section parsed");
             //Now we check intersection
-            method->table = intersect(tfalse, ttrue);
-            clazz->fields = intersect(fieldstrue, fieldsfalse);
+
             delete(ttrue);
             delete(tfalse);
             delete(fieldsfalse);
@@ -631,6 +637,7 @@ namespace TypeChecker {
 
         //Lets instantiate the class scope for this class. Firstly is the constructor since it may initialize important instance variables
         parseMethod(input, input->constructor);
+        debugPrint(input->name, input->name, "Finished constructing parser");
 
         //After parsing the constructor lets make sure we have all of the same fields as our parent
         for(const auto& pair : *(*classes)[input->super]->fields) {
@@ -647,6 +654,9 @@ namespace TypeChecker {
                 }
             }
         }
+        for(auto inh : inherited) {
+            input->orderedMethods->push_back(inh);
+        }
 
         //Then all other methods since they may use instance variables
         for(const auto& pair : *input->methods) {
@@ -656,9 +666,11 @@ namespace TypeChecker {
                 report::error("Method " + pair.first + " shares a name with a field in " + input->name);
                 exit(32);
             }
+
              Method * method = pair.second;
              method->originClass = input->name;
              parseMethod(input, method);
+             input->orderedMethods->push_back(method);
         }
         for(auto inh : inherited) {
             input->methods->insert({inh->name, inh});
@@ -696,20 +708,20 @@ namespace TypeChecker {
         AST::Program *root = dynamic_cast<AST::Program *>(root_);   
         //we need the base classes for Obj, Int, String, Bool as well as the base methods that these base classes have as well
         std::map<std::string,  Method *> * objMethods = new std::map<std::string,  Method *>(); //TOADD METHODS
+        std::vector<Method *> * orderedObjMethods = new std::vector<Method *>();
         Method * Print = new  Method();
         Print->name = "PRINT";
         Print->returnType = "Obj";
         Print->originClass = "Obj";
         Print->arguments = new std::vector< Var *>();
-        objMethods->insert({Print->name, Print});
+        
 
         Method * Str = new Method();
-        Str->name = "STR";
+        Str->name = "STRING";
         Str->returnType = "String";
         Str->originClass = "Obj";
         Str->arguments = new std::vector<Var *>();
-        objMethods->insert({"STR", Str});
-
+        
         Var * objArg = new Var();
         objArg->type = "Obj";
         Method * Equals = new  Method();
@@ -720,18 +732,26 @@ namespace TypeChecker {
         std::vector<Var *> *objEqualsArgs = new std::vector<Var *>();
         objEqualsArgs->push_back(objArg);
         Equals->arguments = objEqualsArgs;
+
+        orderedObjMethods->push_back(Str);
+        orderedObjMethods->push_back(Print);
+        orderedObjMethods->push_back(Equals);
+        objMethods->insert({"STRING", Str});
+        objMethods->insert({Print->name, Print});
         objMethods->insert({"EQUALS", Equals});
 
         Class * Obj = new Class(); 
         Obj->name = "Obj";
         Obj->super = "Nothing";
         Obj->methods = objMethods;
+        Obj->orderedMethods = orderedObjMethods;
         Obj->fields = new std::map<std::string,  Var *>();
         //{NULL, "Obj", "Nothing", NULL, objMethods, new std::map<std::string,  Var *>()};
 
         //Int methods
         std::map<std::string,  Method *> * intMethods = new std::map<std::string,  Method *>(); //TOADD METHODS
-         Method * intPlus = new  Method();
+        std::vector<Method *> * orderedIntMethods = new std::vector<Method *>();
+        Method * intPlus = new  Method();
         intPlus->name="PLUS";
         intPlus->returnType = "Int";
         intPlus->arguments = new std::vector< Var *>();
@@ -770,27 +790,44 @@ namespace TypeChecker {
         intGreater->originClass = "Int";
 
          Method * intStr = new  Method();
-        intStr->name="STR";
+        intStr->name="STRING";
         intStr->returnType = "String";
         intStr->arguments = new std::vector< Var *>();
         intStr->originClass = "Int";
 
+        Method * intPrint = new Method();
+        intPrint->name = "PRINT";
+        intPrint->returnType = "Nothing";
+        intPrint->arguments = new std::vector<Var *>();
+        intPrint->originClass = "Int";
+
+        orderedIntMethods->push_back(intStr);
+        orderedIntMethods->push_back(intPrint);
+        orderedIntMethods->push_back(intEquals);
+        orderedIntMethods->push_back(intLess);
+        orderedIntMethods->push_back(intGreater);
+        orderedIntMethods->push_back(intPlus);
+        orderedIntMethods->push_back(intTimes);
+        intMethods->insert({"STRING", intStr});
+        intMethods->insert({"PRINT", intPrint});
         intMethods->insert({"EQUALS", intEquals});
-        intMethods->insert({"TIMES", intTimes});
-        intMethods->insert({"PRINT", Print});
-        intMethods->insert({"PLUS", intPlus});
         intMethods->insert({"LESS", intLess});
         intMethods->insert({"GREATER", intGreater});
-        intMethods->insert({"Str", intStr});
+        intMethods->insert({"PLUS", intPlus});
+        intMethods->insert({"TIMES", intTimes});
+
+
         Class * Int = new Class();
         Int->name = "Int";
         Int->super = "Obj";
         Int->fields = NULL;
+        Int->orderedMethods = orderedIntMethods;
         Int->methods = intMethods;
         //Class Int = {NULL, "Int", "Obj", NULL, intMethods, NULL};
 
         //String methods
         std::map<std::string,  Method *> * stringMethods = new std::map<std::string,  Method *>();
+        std::vector<Method *> * orderedStringMethods = new std::vector<Method *>();
          Var * strarg = new Var();
         strarg->type = "String";
 
@@ -813,20 +850,25 @@ namespace TypeChecker {
         strPrint->arguments = new std::vector<Var *>();
         strPrint->originClass = "String";
 
-        stringMethods->insert({"STR", strStr});
-        stringMethods->insert({"EQUALS", strEquals});
+        orderedStringMethods->push_back(strStr);
+        orderedStringMethods->push_back(strPrint);
+        orderedStringMethods->push_back(strEquals);
+        stringMethods->insert({"STRING", strStr});
         stringMethods->insert({"PRINT", strPrint});
+        stringMethods->insert({"EQUALS", strEquals});
 
         Class * String = new Class();
         String->name = "String";
         String->super = "Obj";
+        String->orderedMethods = orderedStringMethods;
         String->methods = stringMethods;
         //Class String = {NULL, "String", "Obj", NULL, stringMethods, NULL};
 
         //Boolean methods
         std::map<std::string,  Method *> * booleanMethods = new std::map<std::string,  Method *>();
+        std::vector<Method *> * orderedBooleanMethods = new std::vector<Method *>();
         Method * boolStr = new  Method();
-        boolStr->name="STR";
+        boolStr->name="STRING";
         boolStr->returnType = "String";
         boolStr->arguments = new std::vector< Var *>();
         boolStr->originClass = "Boolean";
@@ -837,26 +879,45 @@ namespace TypeChecker {
         boolPrint->arguments = new std::vector<Var *>();
         boolPrint->originClass = "Boolean";
 
+        Method * boolEquals = new Method();
+        boolPrint->name = "EQUALS";
+        boolPrint->returnType = "Boolean";
+        auto boolArgs = new std::vector<Var *>();
+        Var * boolArg = new Var();
+        boolArg->type = "Boolean";
+        boolArgs->push_back(boolArg);
+        boolPrint->arguments = boolArgs;
+        boolPrint->originClass = "Boolean";
+
+        orderedBooleanMethods->push_back(boolStr);
+        orderedBooleanMethods->push_back(boolPrint);
+        orderedBooleanMethods->push_back(boolEquals);
+        booleanMethods->insert({"STRING", boolStr});
         booleanMethods->insert({"PRINT", boolPrint});
-        booleanMethods->insert({"STR", boolStr});
+        booleanMethods->insert({"EQUALS", boolEquals});
         Class * Boolean = new Class();
         Boolean->name = "Boolean";
         Boolean->super = "Obj";
+        Boolean->orderedMethods = orderedBooleanMethods;
         Boolean->methods = booleanMethods;
         //Class Boolean = {NULL, "Boolean", "Obj", NULL, booleanMethods, NULL};
 
         //Nothing
         std::map<std::string,  Method *> * nothingMethods = new std::map<std::string,  Method *>();
+        std::vector<Method *> * orderedNothingMethods = new std::vector<Method *>();
          Method * nothingStr = new  Method();
-        nothingStr->name="STR";
+        nothingStr->name="STRING";
         nothingStr->returnType = "String";
         nothingStr->arguments = new std::vector< Var *>();
         nothingStr->originClass = "Nothing";
-        nothingMethods->insert({"STR", nothingStr});
+
+        orderedNothingMethods->push_back(nothingStr);
+        nothingMethods->insert({"STRING", nothingStr});
 
         Class * Nothing = new Class();
         Nothing->name = "Nothing";
         Nothing->super = "Obj";
+        Nothing->orderedMethods = orderedNothingMethods;
         Nothing->methods = nothingMethods;
         //Class Nothing = {NULL, "Nothing", "Obj", NULL, nothingMethods, NULL};
         

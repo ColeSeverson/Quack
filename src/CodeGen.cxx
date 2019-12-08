@@ -387,18 +387,16 @@ void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
         }
         object_code << ");\n";
         //Rest of the methods WE NEED TO MAKE SURE THERE IS A THIS POINTER IN EACH
-        for(auto method_pair : *(pair.second->methods)) {
-            std::string method_name;
-            if(method_pair.first.compare(class_name) == 0) {
+        for(auto method : *pair.second->orderedMethods) {
+            std::string method_name = method->name;
+            if(method_name.compare(class_name) == 0) {
                 continue;
-            }else {
-                method_name = method_pair.first;
             }
-            std::string method_return = method_pair.second->returnType;
-            std::vector<Var *> * method_args = method_pair.second->arguments;
+            std::string method_return = method->returnType;
+            std::vector<Var *> * method_args = method->arguments;
             object_code << "\tobj_" << method_return << " (*" << method_name << ") (";
             
-            object_code << "obj_" << method_pair.second->originClass << "";
+            object_code << "obj_" << method->originClass << "";
             for(auto arg : *method_args) {
                 std::string arg_type = arg->type;
                 object_code << ", obj_" << arg_type << " ";
@@ -439,17 +437,17 @@ void CodeGenerator::generateConstructor(std::ofstream & object_code, Class * cur
 void CodeGenerator::generateClassMethods(std::ofstream & object_code, Class * current_class) {
     debugPrint("Entering generateClassMethods");
     std::string class_name = current_class->name;
-    for(auto pair : *current_class->methods) {
+    for(auto method : *current_class->orderedMethods) {
         
         std::vector<std::string> * inherited = current_class->inherited;
+        std::string method_name = method->name;
 
-        if(pair.first.compare(class_name) == 0 || (std::find(inherited->begin(), inherited->end(), pair.first) != inherited->end())) {
+        if(method_name.compare(class_name) == 0 || (std::find(inherited->begin(), inherited->end(), method_name) != inherited->end())) {
             continue;
         }
-        debugPrint("generatingMethod " + pair.first + " in class " + class_name);
+        debugPrint("generatingMethod " + method_name + " in class " + class_name);
         //Now if it isn't the constructor
-        std::string return_type = pair.second->returnType;
-        std::string method_name = pair.second->name;
+        std::string return_type = method->returnType;
         Scope * scope = new Scope();
         scope->parent_scope = NULL;
         scope->variables = new std::vector<std::string>();
@@ -458,7 +456,7 @@ void CodeGenerator::generateClassMethods(std::ofstream & object_code, Class * cu
         //generate the this arg
         object_code << "obj_" << class_name << " this";
 
-        for(auto arg : *pair.second->arguments) {
+        for(auto arg : *method->arguments) {
             std::string arg_name = arg->name;
             std::string arg_type = arg->type;
             scope->variables->push_back(arg_name);
@@ -466,10 +464,10 @@ void CodeGenerator::generateClassMethods(std::ofstream & object_code, Class * cu
         }
         object_code << ") {\n";
         //now we parse the method statments
-        for(auto node : pair.second->node->getStatements()->getElements()) {
+        for(auto node : method->node->getStatements()->getElements()) {
             object_code << "\t";
             AST::Statement * statement = dynamic_cast<AST::Statement *>(node);
-            CodeGenerator::generateStatement(object_code, pair.first, class_name, scope, statement);
+            CodeGenerator::generateStatement(object_code, method_name, class_name, scope, statement);
             object_code << ";";
         }
         object_code << "}\n";
