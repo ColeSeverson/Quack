@@ -10,19 +10,19 @@ struct CodeGenerator::Scope {
     std::vector<std::string> * variables;
 }program_scope;
 
+//Typedef for sanity
 typedef struct Scope Scope;
+typedef struct Structs::Class Class;
+typedef struct Structs::Method Method;
+typedef struct Structs::Var Var;
 
-void CodeGenerator::debugPrint(std::string statement) {
-    if (debug_level == 1) {
-        std::cout << "CodeGen: " << statement << std::endl;
-    }
-}
-CodeGenerator::CodeGenerator(AST::ASTNode * root, int debugLevel) {
+CodeGenerator::CodeGenerator(AST::ASTNode * root, std::map<std::string, Class *> * classesmap, int debugLevel) {
     //Set up the stuff we need
     this->root = dynamic_cast<AST::Program *>(root);
     this->debug_level = debugLevel;
     this->register_num = 0;
     this->label_num = 0;
+    this->classes_map = classesmap;
 
     //Instantiate the 'global' scope
     program_scope.variables = new std::vector<std::string>();
@@ -35,6 +35,12 @@ CodeGenerator::~CodeGenerator() {
 }
 
 //Here are methods that are only used internally
+void CodeGenerator::debugPrint(std::string statement) {
+    if (debug_level == 1) {
+        std::cout << "CodeGen: " << statement << std::endl;
+    }
+}
+
 bool CodeGenerator::isInScope(std::string var, Scope * scope) {
     debugPrint("IsInScope");
     std::vector<std::string> * vec = scope->variables;
@@ -293,16 +299,52 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
     }
     return "";
 }
+bool CodeGenerator::isBuiltIn(std::string class_name) {
+    return (class_name.compare("Obj") == 0 || class_name.compare("Nothing") == 0 || class_name.compare("Int") == 0 ||
+        class_name.compare("String") == 0 || class_name.compare("Boolean") == 0);
+}
+void CodeGenerator::generateClassForwardDecls(std::ofstream & object_code) {
+    debugPrint("Generate forward declarations");
+    //Go through and generate the forward declarations for all non built in classes
+    for(auto pair : *(this->classes_map)) {
+        if(this->isBuiltIn(pair.first)) {
+            continue;
+        }
+        debugPrint("Found class " + pair.first);
+        std::string class_name = pair.second->name;
+        object_code << "struct obj_" << class_name << "_struct;\n";
+        object_code << "typedef struct obj_" << class_name << "_struct * obj_" << class_name << ";\n";
+        object_code << "struct class_" << class_name << "_struct;\n";
+        object_code << "typedef struct class_" << class_name << "_struct * class_" << class_name << ";\n\n";
+    }
+}
+void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
+    debugPrint("Generate class declarations");
+    for(auto pair : *(this->classes_map)) {
+        if(this->isBuiltIn(pair.first)) {
+            continue;
+        }
+        
+        std::string class_name = pair.second->name;
+        std::map<std::string, Var *> class_fields = *(pair.second->fields);
 
-void generateClassDecls(std::ofstream & object_code, std::vector<AST::Class *> * classes) {
-    
+        object_code << "typedef struct obj_" << class_name << "_struct {\n";
+        object_code << "\tclass_" << class_name << " clazz;\n";
+
+        for(auto pair2: class_fields) {
+            std::string field_name = pair2.second->name;
+            std::string field_type = pair2.second->type;
+            object_code << "\tobj_" << field_type << " " << field_name << ";\n";
+        }
+
+        object_code << "} * obj_" << class_name << ";\n";
+    }
+}
+void CodeGenerator::generateMethod(std::ofstream & object_code, struct Scope * current_scope,  AST::Method * method) {
+
 }
 
-void generateMethod(std::ofstream & object_code, struct Scope * current_scope,  AST::Method * method) {
-
-}
-
-void generateClass(std::ofstream & object_code, AST::Class * clazz) {
+void CodeGenerator::generateClass(std::ofstream & object_code, AST::Class * clazz) {
 
 }
 
@@ -340,7 +382,7 @@ int CodeGenerator::Generate(std::string fileName) {
     this->generateInitial(object_code);
 
     //Now lets create a vector of just the user added classes
-    std::vector<AST::Class *> classes;
+    /*std::vector<AST::Class *> classes;
     for(auto clazz : root->classes_.getElements()) {
         std::string name = clazz->getName()->getText();
         if(name.compare("Obj") == 0 || name.compare("Nothing") == 0
@@ -348,7 +390,7 @@ int CodeGenerator::Generate(std::string fileName) {
                 || name.compare("Boolean") == 0)
             continue;  
         classes.push_back(clazz);
-    }
+    }*/
     
     /*
     std::vector<std::string> classes_topo;
@@ -367,10 +409,8 @@ int CodeGenerator::Generate(std::string fileName) {
     }
     */
     //Now classes_topo is a topologically (sort of) sorted list of class names that we will use to generate the forward decls
-    /*CodeGenerator::generateClassDecls(object_code, &classes);
-    for(auto clazz : classes) {
-        CodeGenerator::generateClass(object_code, clazz);
-    }*/
+    this->generateClassForwardDecls(object_code);
+    this->generateClassDecls(object_code);
 
 
     this->generateMain(object_code);

@@ -9,6 +9,7 @@
 #include "ClassChecker.h"
 #include "TypeChecker.h"
 #include "CodeGen.h"
+#include "Structs.h"
 
 #include <iostream>
 #include <unistd.h>  // getopt is here
@@ -104,9 +105,10 @@ int main(int argc, char **argv) {
 		        exit(16);
 	        }
 
+            std::map<std::string, struct Structs::Class *> *classes = new std::map<std::string, struct Structs::Class *>();
+
             //now for types
-            TypeChecker::Check(root, debug);
-            if (type == 1) {
+            if (TypeChecker::Check(root, classes, debug)) {
                 std::cout << "Failed the type checker terminating..." << std::endl;
                 exit(32);
             }
@@ -117,7 +119,7 @@ int main(int argc, char **argv) {
                 std::cout << std::endl;
             }
 
-            CodeGenerator * codeGen = new CodeGenerator(root, debug);
+            CodeGenerator * codeGen = new CodeGenerator(root, classes, debug);
 
             if (codegen == 1 && codeGen->Generate("code.c") != 0) {
                 std::cout << "Failed to generate code" << std::endl;

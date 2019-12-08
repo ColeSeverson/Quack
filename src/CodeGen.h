@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <map>
+#include "Structs.h"
 
 class CodeGenerator {
     private:
@@ -14,6 +15,7 @@ class CodeGenerator {
         int debug_level;
         int register_num;
         int label_num;
+        std::map<std::string, struct Structs::Class *> * classes_map;
         
         //Structs
         struct Scope;
@@ -23,11 +25,13 @@ class CodeGenerator {
         int getRegisterNum() {return register_num++;};
         int getLabelNum() {return label_num++;};
         bool isInScope(std::string, struct Scope *);
+        bool isBuiltIn(std::string);
 
         //Generators
         void generateInitial(std::ofstream &);
         void generateMain(std::ofstream &);
-        void generateClassDecls(std::ofstream &, std::vector<AST::Class *> *);
+        void generateClassForwardDecls(std::ofstream &);
+        void generateClassDecls(std::ofstream &);
         void generateClass(std::ofstream &, AST::Class *);
         void generateMethod(std::ofstream &, struct Scope *, AST::Method *);
 
@@ -36,7 +40,7 @@ class CodeGenerator {
         std::string generateLExpr(std::ofstream &, std::string, std::string, std::string,  struct Scope *, AST::LExpr *);
 
     public:
-        CodeGenerator(AST::ASTNode * root, int debugLevel);
+        CodeGenerator(AST::ASTNode * root, std::map<std::string, struct Structs::Class *> * classes_map, int debugLevel);
         ~CodeGenerator();
         int Generate(std::string fileName);
 };

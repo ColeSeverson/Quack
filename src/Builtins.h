@@ -213,6 +213,7 @@ struct class_Int_struct {
   obj_Obj (*PRINT) (obj_Obj);      /* Inherited */
   obj_Boolean (*EQUALS) (obj_Int, obj_Obj); /* Overridden */
   obj_Boolean (*LESS) (obj_Int, obj_Int);   /* Introduced */
+  obj_Boolean (*GREATER) (obj_Int, obj_Int);
   obj_Int (*PLUS) (obj_Int, obj_Int);       /* Introduced */
 };
 
@@ -241,6 +242,7 @@ obj_String Nothing_method_STRING(obj_Nothing this);
 obj_String Int_method_STRING(obj_Int this); 
 obj_Boolean Int_method_EQUALS(obj_Int this, obj_Obj other);
 obj_Boolean Int_method_LESS(obj_Int this, obj_Int other);
+obj_Boolean Int_method_GREATER(obj_Int this, obj_Int other);
 obj_Int Int_method_PLUS(obj_Int this, obj_Int other);
 
 #endif

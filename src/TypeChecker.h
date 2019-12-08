@@ -3,12 +3,10 @@
 
 #include "ASTNode.h"
 #include <map>
+#include "Structs.h"
 
 namespace TypeChecker {
-        struct Var;
-        struct Class;
-        struct Method;
-        int Check(AST::ASTNode *root_, int debug);
+        int Check(AST::ASTNode *root_, std::map<std::string, struct Structs::Class *> * classes_map, int debug);
 }
 
 #endif
