@@ -32,8 +32,9 @@ class CodeGenerator {
         void generateMain(std::ofstream &);
         void generateClassForwardDecls(std::ofstream &);
         void generateClassDecls(std::ofstream &);
-        void generateClass(std::ofstream &, AST::Class *);
-        void generateMethod(std::ofstream &, struct Scope *, AST::Method *);
+        void generateClassMethods(std::ofstream &, struct Structs::Class *);
+        void generateConstructor(std::ofstream &, struct Structs::Class *);
+        void generateClass(std::ofstream &, struct Structs::Class *);
 
         //Generators Cont
         std::string generateStatement(std::ofstream &, std::string, std::string, struct Scope *, AST::Statement *);

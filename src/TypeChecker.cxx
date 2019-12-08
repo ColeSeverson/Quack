@@ -60,7 +60,7 @@ namespace TypeChecker {
         return output;
     }
      Method * createMethod(AST::Method *method) {
-         Method * output = new  Method();
+        Method * output = new  Method();
         output->name = method->getName()->getText();
         output->node = method;
 
@@ -68,7 +68,7 @@ namespace TypeChecker {
         std::map<std::string,  Var *> *variables = new std::map<std::string,  Var *>();
         std::vector<Var *> *args = new std::vector<Var *>();
         for(auto argument : method->getFormals()->getElements()) {
-             Var * var = new  Var();
+            Var * var = new  Var();
             var->name = dynamic_cast<AST::Ident *>(argument->getName())->getText();
             var->type = dynamic_cast<AST::Ident *>(argument->getType())->getText();
             args->push_back(var);
@@ -108,7 +108,7 @@ namespace TypeChecker {
         return 0;
     }
      Class * createClass(AST::Class * clazz) {
-         Class * output = new  Class();
+        Class * output = new  Class();
         output->node = clazz;
         output->name = clazz->getName()->getText();
         output->super = clazz->getSuper()->getText();
@@ -128,7 +128,7 @@ namespace TypeChecker {
             }
             methods->insert({method->getName()->getText(), createMethod(method)});
         }
-
+        output->inherited = new std::vector<std::string>();
         output->methods = methods;
         return output;
     }
@@ -618,6 +618,7 @@ namespace TypeChecker {
             std::map<std::string,  Method *>::iterator it = input->methods->find(pair.first);
             if(it == input->methods->end()) {
                 //We don't have this method! Inherit it!
+                input->inherited->push_back(pair.first);
                 inherited.push_back(pair.second);
             } else {
                 //We do have this method... Make sure the signature matches!
@@ -694,17 +695,23 @@ namespace TypeChecker {
         AST::Program *root = dynamic_cast<AST::Program *>(root_);   
         //we need the base classes for Obj, Int, String, Bool as well as the base methods that these base classes have as well
         std::map<std::string,  Method *> * objMethods = new std::map<std::string,  Method *>(); //TOADD METHODS
-         Method * Print = new  Method();
+        Method * Print = new  Method();
         Print->name = "PRINT";
         Print->returnType = "Obj";
         Print->arguments = new std::vector< Var *>();
         objMethods->insert({Print->name, Print});
 
-         Method * Equals = new  Method();
-        Equals->name = "Equals";
+        Var * objArg = new Var();
+        objArg->type = "Obj";
+        Method * Equals = new  Method();
+        Equals->name = "EQUALS";
         Equals->returnType = "Boolean";
-        Equals->arguments = new std::vector< Var *>();
+
+        std::vector<Var *> *objEqualsArgs = new std::vector<Var *>();
+        objEqualsArgs->push_back(objArg);
+        Equals->arguments = objEqualsArgs;
         objMethods->insert({"EQUALS", Equals});
+
         Class * Obj = new Class(); 
         Obj->name = "Obj";
         Obj->super = "Nothing";
@@ -813,6 +820,7 @@ namespace TypeChecker {
         nothingStr->name="STR";
         nothingStr->returnType = "String";
         nothingStr->arguments = new std::vector< Var *>();
+        nothingMethods->insert({"STR", nothingStr});
         Class * Nothing = new Class();
         Nothing->name = "Nothing";
         Nothing->super = "Obj";

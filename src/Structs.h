@@ -28,6 +28,7 @@ namespace Structs {
         struct Method *constructor;
         std::map<std::string, struct Method *> *methods;
         std::map<std::string, struct Var *> *fields;
+        std::vector<std::string> *inherited;
     };
 }
 

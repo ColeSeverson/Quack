@@ -42,7 +42,7 @@ void CodeGenerator::debugPrint(std::string statement) {
 }
 
 bool CodeGenerator::isInScope(std::string var, Scope * scope) {
-    debugPrint("IsInScope");
+    debugPrint("IsInScope " + var);
     std::vector<std::string> * vec = scope->variables;
     if(std::find(vec->begin(), vec->end(), var) != vec->end()) {
         return true;
@@ -64,6 +64,10 @@ std::string CodeGenerator::generateLExpr(std::ofstream &object_code, std::string
             {
                 debugPrint("Found a Ident");
                 AST::Ident * ident = dynamic_cast<AST::Ident *>(lexpr);
+
+                if(ident->getText().compare("this") == 0) {
+                    return "this";
+                }
 
                 std::vector<std::string> * vec = current_scope->variables;
                 if(!CodeGenerator::isInScope(ident->getText(), current_scope)) {
@@ -263,6 +267,24 @@ std::string CodeGenerator::generateStatement(std::ofstream &object_code, std::st
                 debugPrint("Found an CONSTRUCTOR");
                 AST::Construct * constructor = dynamic_cast<AST::Construct *>(statement);
                 
+                std::string class_name = constructor->getName()->getText();
+                std::string to_return = "new_" + class_name + "(";
+
+                //now we parse the arguments
+                int i = 0;
+                for(auto actual : constructor->getArgs()->getElements()) {
+                    AST::Statement * statement = dynamic_cast<AST::Statement *>(actual);
+                    std::string arg_name = CodeGenerator::generateStatement(object_code, method, clazz, current_scope, statement);
+                    if (i == 0) {
+                        to_return = to_return + arg_name;
+                        i++;
+                    } else {
+                        to_return = to_return + ", " + arg_name;
+                    }
+                }
+
+                to_return = to_return + ")";
+                return to_return;
                 break;
             }
         case AST::statementEnum::CALL:
@@ -303,6 +325,8 @@ bool CodeGenerator::isBuiltIn(std::string class_name) {
     return (class_name.compare("Obj") == 0 || class_name.compare("Nothing") == 0 || class_name.compare("Int") == 0 ||
         class_name.compare("String") == 0 || class_name.compare("Boolean") == 0);
 }
+
+//Generate the forward decls so that we can reference the class pointers in the others
 void CodeGenerator::generateClassForwardDecls(std::ofstream & object_code) {
     debugPrint("Generate forward declarations");
     //Go through and generate the forward declarations for all non built in classes
@@ -318,6 +342,8 @@ void CodeGenerator::generateClassForwardDecls(std::ofstream & object_code) {
         object_code << "typedef struct class_" << class_name << "_struct * class_" << class_name << ";\n\n";
     }
 }
+
+//Now we generate the obj_class and struct_class c stuff
 void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
     debugPrint("Generate class declarations");
     for(auto pair : *(this->classes_map)) {
@@ -339,11 +365,29 @@ void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
 
         object_code << "} * obj_" << class_name << ";\n\n\n";
 
-        object_code << "struct class_" << class_name << "struct {\n";
+        object_code << "struct class_" << class_name << "_struct {\n";
+
+        //First thing we need is the constructor
+        object_code << "\tobj_" << class_name << " (*constructor) (";
+        std::vector<Var *> *constructor_args = pair.second->constructor->arguments;
+
+        int i = 0;
+        for(auto arg : *constructor_args) {
+            if(i == 0) {
+            std::string arg_type = arg->type;
+            object_code << "obj_" << arg_type << " ";
+            ++i;
+            } else {
+                std::string arg_type = arg->type;
+                object_code << ", obj_" << arg_type << " ";
+            }
+        }
+        object_code << ");\n";
+        //Rest of the methods
         for(auto method_pair : *(pair.second->methods)) {
             std::string method_name;
             if(method_pair.first.compare(class_name) == 0) {
-                method_name = "constructor";
+                continue;
             }else {
                 method_name = method_pair.first;
             }
@@ -364,24 +408,87 @@ void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
             }
             object_code << ");\n";
         }
-        object_code << "};\n\n";
-
-        object_code << "extern class_" << class_name << " the_class_" << class_name << ";\n\n";
+        object_code << "} *the_class_" << class_name << ";\n\n";
     }
 }
-void CodeGenerator::generateMethod(std::ofstream & object_code, struct Scope * current_scope,  AST::Method * method) {
 
+//Generate the constructor seperately from the normal methods
+void CodeGenerator::generateConstructor(std::ofstream & object_code, Class * current_class) {
+    debugPrint("Entering generateConstructor");
+    std::string class_name = current_class->name;
+    std::vector<Var *> args = *(current_class->constructor->arguments);
+
+    object_code << "obj_" << class_name << " new_" << class_name << "(";
+    int i = 0;
+    for(auto arg : args) {
+        std::string arg_type = arg->type;
+        std::string arg_name = arg->name;
+        if(i == 0) {
+            object_code << "obj_" << arg_type << " " << arg_name;
+            i++;
+        }else {
+            object_code << ", obj_" << arg_type << " " << arg_name;
+        }
+    }
+    object_code << ") {\n";
+    
+    //now we generate the content of the constructor
+    object_code << "\tobj_" << class_name << " new_thing = (obj_" << class_name << ")malloc(sizeof(struct obj_" << class_name << "_struct));\n";
+    object_code << "\tnew_thing->clazz = the_class_" << class_name << ";\n";
+    object_code << "\treturn new_thing;\n}\n\n";
 }
 
-void CodeGenerator::generateClass(std::ofstream & object_code, AST::Class * clazz) {
+//Now that we have all of the decls we will generate the Methods
+void CodeGenerator::generateClassMethods(std::ofstream & object_code, Class * current_class) {
+    debugPrint("Entering generateClassMethods");
+    std::string class_name = current_class->name;
+    for(auto pair : *current_class->methods) {
+        
+        std::vector<std::string> * inherited = current_class->inherited;
 
+        if(pair.first.compare(class_name) == 0 || (std::find(inherited->begin(), inherited->end(), pair.first) != inherited->end())) {
+            continue;
+        }
+        debugPrint("generatingMethod " + pair.first + " in class " + class_name);
+        //Now if it isn't the constructor
+        std::string return_type = pair.second->returnType;
+        std::string method_name = pair.second->name;
+        Scope * scope = new Scope();
+        scope->parent_scope = NULL;
+        scope->variables = new std::vector<std::string>();
+        object_code << "obj_" << return_type << " " << method_name << "(";
+
+        //generate the this arg
+        object_code << "obj_" << class_name << " this";
+
+        for(auto arg : *pair.second->arguments) {
+            std::string arg_name = arg->name;
+            std::string arg_type = arg->type;
+            scope->variables->push_back(arg_name);
+            object_code << ", obj_" << arg_type << " " << arg_name;
+        }
+        object_code << ") {\n";
+        //now we parse the method statments
+        for(auto node : pair.second->node->getStatements()->getElements()) {
+            object_code << "\t";
+            AST::Statement * statement = dynamic_cast<AST::Statement *>(node);
+            CodeGenerator::generateStatement(object_code, pair.first, class_name, scope, statement);
+            object_code << ";";
+        }
+        object_code << "}\n";
+    }
 }
 
-
+//Generate the classes
+void CodeGenerator::generateClass(std::ofstream & object_code, Class * current_class) {
+    debugPrint("Entering generateClass");
+    this->generateConstructor(object_code, current_class);
+}
 
 void CodeGenerator::generateInitial(std::ofstream &object_code) {
     debugPrint("Entering generateInitial");
     object_code << "#include \"Builtins.h\"" << std::endl;
+    object_code << "#include <stdlib.h>" << std::endl;
 }
 
 void CodeGenerator::generateMain(std::ofstream &object_code) {
@@ -441,6 +548,13 @@ int CodeGenerator::Generate(std::string fileName) {
     this->generateClassForwardDecls(object_code);
     this->generateClassDecls(object_code);
 
+    for(auto pair : *classes_map) {
+        if(this->isBuiltIn(pair.first)) {
+            continue;
+        }
+        this->generateClass(object_code, pair.second);
+        this->generateClassMethods(object_code, pair.second);
+    }
 
     this->generateMain(object_code);
 
