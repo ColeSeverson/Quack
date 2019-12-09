@@ -18,5 +18,5 @@ Working and choices:
     -If a variable is supposed to be instantiated within a control statement (like one in both branches of an if) it must be instantiated before the control statement
     -INT has all basic arithmatic (add, subtract, multiply) but no divide
     -All but 4 of the testbench tests complete succesfully, and 3 of those are because of no typecasing
-
+    -STR() method is STRING() instead (not sure why but I had a split between the two so I went with STRING)
 
