@@ -142,6 +142,16 @@ namespace TypeChecker {
         }
     }
 
+    bool isSuperType(std::string super_type, std::string sub_type) {
+        while(sub_type.compare("Null")) {
+            if(super_type.compare(sub_type) == 0) {
+                return true;
+            }  
+            sub_type = (*classes)[sub_type]->super;
+        }
+        return false;
+    }
+
     std::string parseExpr( Class * clazz,  Method * method, AST::Statement * stat);
     //this returns a 'location'
      Var * processLexpr( Class * clazz,  Method * method, AST::LExpr * lExpr) {
@@ -301,8 +311,10 @@ namespace TypeChecker {
                 debugPrint(clazz->name, method->name, location->name + "is being initialized");
             }else if (location->init == Structs::isInit::yes) {
                 if (location->type.compare(type) != 0) {
-                    report::error("Type mismatch variable " + location->name + " has type " + location->type + " so you cannot assign a " + type);
-                    exit(64);
+                    if(!isSuperType(location->type, type)) {
+                        report::error("Type mismatch variable " + location->name + " has type " + location->type + " so you cannot assign a " + type);
+                        exit(64);
+                    }
                 } //we dont need to do anything else right now since it is already the right type
             }
 
@@ -328,8 +340,10 @@ namespace TypeChecker {
             }
 
             if(assi->getStaticType()->getText().compare(type) != 0) {
-                report::error("Right side of assignment does not evauluate to the static type for " + location->name);
-                exit(64);
+                if(!isSuperType(assi->getStaticType()->getText(), type)) {
+                    report::error("Right side of assignment does not evauluate to the static type for " + location->name);
+                    exit(64);
+                }
             }
 
             if(location->init == Structs::isInit::no) {
@@ -337,8 +351,10 @@ namespace TypeChecker {
                 location->init = Structs::isInit::yes;
             }else if (location->init == Structs::isInit::yes) {
                 if (location->type.compare(type) != 0) {
-                    report::error("Type mismatch variable " + location->name + " has type " + location->type + " so you cannot assign a " + type);
-                    exit(64);
+                    if(!isSuperType(location->type, type)) {
+                        report::error("Type mismatch variable " + location->name + " has type " + location->type + " so you cannot assign a " + type);
+                        exit(64);
+                    }
                 } //we dont need to do anything else right now since it is already the right type
             }
 
@@ -973,7 +989,7 @@ namespace TypeChecker {
         }
 
         debugPrint("","", "Finished parsing the global statements");
-        printClasses();
+        //printClasses();
         if(debugLevel == 1)
             std::cout << "Variables in max scope " << printVariablesInLine(scopeVariables) << std::endl;
 

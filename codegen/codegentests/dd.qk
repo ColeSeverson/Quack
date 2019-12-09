@@ -1,0 +1,27 @@
+class parent() {
+    def test() {
+        "parent_test".PRINT();
+    }
+}
+
+class child1() extends parent {
+    def test() {
+        "child1".PRINT();
+    }
+}
+
+class child2() extends parent {
+    def test() {
+        "child2".PRINT();
+    }
+    def test2() {
+        "child2test2".PRINT();
+    }
+}
+x: parent = parent();
+if(5 < 4) {
+    x = child1();
+}else {
+    x = child2();
+}
+x.test();

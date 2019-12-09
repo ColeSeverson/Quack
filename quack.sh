@@ -10,6 +10,6 @@ fi
 
 echo "Running parser"
 
-./bin/parser $1
+./bin/parser -d $1
 mv code.c codegen/
-gcc -g ./codegen/code.c codegen/Builtins.o
+gcc -g -Wno-incompatible-pointer-types ./codegen/code.c codegen/Builtins.o
