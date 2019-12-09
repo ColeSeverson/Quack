@@ -3,8 +3,8 @@ LexChallenge.qk,INIT_BEFORE_USE
 Pt.qk,PASS
 Pt2.qk,PASS
 Pt_missing_fields.qk,INIT_BEFORE_USE
-Sqr.qk,TYPE_INF
-TypeWalk.qk,TYPE_INF
+Sqr.qk,CLASS_HIERARCHY
+TypeWalk.qk,PARSER
 adv_constructor_init.qk,PASS
 bad_break.qk,PARSER
 bad_class.qk,PARSER
