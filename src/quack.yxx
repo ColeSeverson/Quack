@@ -189,8 +189,8 @@ method: DEF ident '(' formals ')' return_type statement_block
 	;
 
 return_type: ':' ident {$$ = $2;}
-	   | /* empty */ {$$ = new AST::Ident("None"); }
-	   | error '{' {$$ = new AST::Ident("None"); }
+	   | /* empty */ {$$ = new AST::Ident("Nothing"); }
+	   | error '{' {$$ = new AST::Ident("Nothing"); }
 	    ;
 /* Zero or more statements 
  * (although a program with zero statements is pretty boring) 
@@ -256,7 +256,7 @@ statement: l_expr ':' ident '=' expr ';'
     ;
 
 statement: RETURN expr ';' {$$ = new AST::Return(*$2); }; 
-statement: RETURN ';' {$$ = new AST::Return(*new AST::Ident("none")); };
+statement: RETURN ';' {$$ = new AST::Return(*new AST::Ident("Nothing")); };
 
 statement: expr ';' {$$ = $1; };
 

@@ -623,6 +623,11 @@ namespace TypeChecker {
         for(const auto& pair : *(*classes)[input->super]->methods) {
             std::map<std::string,  Method *>::iterator it = input->methods->find(pair.first);
             if(it == input->methods->end()) {
+                auto it2 = classes->find(pair.first);
+                if(it2 != classes->end()) {
+                    //we dont inherit constructors
+                    continue;
+                }
                 //We don't have this method! Inherit it!
                 input->inherited->push_back(pair.first);
                 inherited.push_back(pair.second);
@@ -654,8 +659,12 @@ namespace TypeChecker {
                 }
             }
         }
-        for(auto inh : inherited) {
-            input->orderedMethods->push_back(inh);
+        
+        for(std::vector<Method *>::reverse_iterator it = inherited.rbegin(); it != inherited.rend(); it++) {
+            input->orderedMethods->push_back(*it);
+        }
+        for(auto met : *input->orderedMethods) {
+            debugPrint("        ", "---", met->name);
         }
 
         //Then all other methods since they may use instance variables
@@ -711,7 +720,7 @@ namespace TypeChecker {
         std::vector<Method *> * orderedObjMethods = new std::vector<Method *>();
         Method * Print = new  Method();
         Print->name = "PRINT";
-        Print->returnType = "Obj";
+        Print->returnType = "Nothing";
         Print->originClass = "Obj";
         Print->arguments = new std::vector< Var *>();
         
@@ -736,6 +745,7 @@ namespace TypeChecker {
         orderedObjMethods->push_back(Str);
         orderedObjMethods->push_back(Print);
         orderedObjMethods->push_back(Equals);
+
         objMethods->insert({"STRING", Str});
         objMethods->insert({Print->name, Print});
         objMethods->insert({"EQUALS", Equals});

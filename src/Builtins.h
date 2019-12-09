@@ -232,7 +232,7 @@ extern obj_Int int_literal(int n);
  *================================
  */
 obj_String Obj_method_STRING(obj_Obj this);
-obj_Obj Obj_method_PRINT(obj_Obj this); 
+obj_Nothing Obj_method_PRINT(obj_Obj this); 
 obj_Boolean Obj_method_EQUALS(obj_Obj this, obj_Obj other); 
 obj_String String_method_STRING(obj_String this);
 obj_String String_method_PRINT(obj_String this); 

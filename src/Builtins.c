@@ -43,7 +43,7 @@ obj_String Obj_method_STRING(obj_Obj this) {
 
 
 /* Obj:PRINT */
-obj_Obj Obj_method_PRINT(obj_Obj this) {
+obj_Nothing Obj_method_PRINT(obj_Obj this) {
   obj_String str = this->clazz->STRING(this);
   fprintf(stdout, "%s", str->text);
   return this;

@@ -367,8 +367,6 @@ void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
 
         object_code << "struct class_" << class_name << "_struct {\n";
 
-        //super reference
-        object_code << "\tclass_" << pair.second->super << " super_;\n";
 
         //First thing we need is the constructor
         object_code << "\tobj_" << class_name << " (*constructor) (";
@@ -386,6 +384,7 @@ void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
             }
         }
         object_code << ");\n";
+
         //Rest of the methods WE NEED TO MAKE SURE THERE IS A THIS POINTER IN EACH
         for(auto method : *pair.second->orderedMethods) {
             std::string method_name = method->name;
@@ -403,7 +402,50 @@ void CodeGenerator::generateClassDecls(std::ofstream & object_code) {
             }
             object_code << ");\n";
         }
-        object_code << "} *the_class_" << class_name << ";\n\n";
+        object_code << "};\n\n//Now lets generate the method forward decls so we can delcare the _the_class instance\n";
+
+        //Now lets generate method forward decls
+        //First is the constructor 
+        object_code << "obj_" << class_name << " new_" << class_name << "(";
+        i = 0;
+        auto args = *pair.second->constructor->arguments;
+        for(auto arg : args) {
+            std::string arg_type = arg->type;
+            std::string arg_name = arg->name;
+            if(i == 0) {
+                object_code << "obj_" << arg_type << " " << arg_name;
+                i++;
+            }else {
+                object_code << ", obj_" << arg_type << " " << arg_name;
+            }
+        }
+        object_code << ");\n";
+        for(auto method : *pair.second->orderedMethods) {
+            std::vector<std::string> * inherited = pair.second->inherited;
+            std::string method_name = method->name;
+
+            if(method_name.compare(class_name) == 0 || (std::find(inherited->begin(), inherited->end(), method_name) != inherited->end())) {
+                continue;
+            }
+            debugPrint("generatingMethod " + method_name + " in class " + class_name);
+            //Now if it isn't the constructor
+            std::string return_type = method->returnType;
+            Scope * scope = new Scope();
+            scope->parent_scope = NULL;
+            scope->variables = new std::vector<std::string>();
+            object_code << "obj_" << return_type << " " << class_name << "_method_" << method_name << "(";
+
+            //generate the this arg
+            object_code << "obj_" << class_name << " this";
+
+            for(auto arg : *method->arguments) {
+                std::string arg_name = arg->name;
+                std::string arg_type = arg->type;
+                scope->variables->push_back(arg_name);
+                object_code << ", obj_" << arg_type << " " << arg_name;
+            }
+            object_code << ");\n";
+        }
     }
 }
 
@@ -412,12 +454,16 @@ void CodeGenerator::generateConstructor(std::ofstream & object_code, Class * cur
     debugPrint("Entering generateConstructor");
     std::string class_name = current_class->name;
     std::vector<Var *> args = *(current_class->constructor->arguments);
-
+    Scope * scope = new Scope();
+    scope->parent_scope = NULL;
+    scope->variables = new std::vector<std::string>();
     object_code << "obj_" << class_name << " new_" << class_name << "(";
     int i = 0;
     for(auto arg : args) {
         std::string arg_type = arg->type;
         std::string arg_name = arg->name;
+        scope->variables->push_back(arg_name);
+
         if(i == 0) {
             object_code << "obj_" << arg_type << " " << arg_name;
             i++;
@@ -428,9 +474,16 @@ void CodeGenerator::generateConstructor(std::ofstream & object_code, Class * cur
     object_code << ") {\n";
     
     //now we generate the content of the constructor
-    object_code << "\tobj_" << class_name << " new_thing = (obj_" << class_name << ")malloc(sizeof(struct obj_" << class_name << "_struct));\n";
-    object_code << "\tnew_thing->clazz = the_class_" << class_name << ";\n";
-    object_code << "\treturn new_thing;\n}\n\n";
+    object_code << "\tobj_" << class_name << " this = (obj_" << class_name << ")malloc(sizeof(struct obj_" << class_name << "_struct));\n";
+    object_code << "\tthis->clazz = the_class_" << class_name << ";\n";
+
+    for(auto node: current_class->constructor->node->getStatements()->getElements()) {
+        AST::Statement *statement = dynamic_cast<AST::Statement *>(node);
+
+        CodeGenerator::generateStatement(object_code, "constructor", class_name, scope, statement);
+    }
+
+    object_code << "\treturn this;\n}\n\n";
 }
 
 //Now that we have all of the decls we will generate the Methods
@@ -451,7 +504,7 @@ void CodeGenerator::generateClassMethods(std::ofstream & object_code, Class * cu
         Scope * scope = new Scope();
         scope->parent_scope = NULL;
         scope->variables = new std::vector<std::string>();
-        object_code << "obj_" << return_type << " " << method_name << "(";
+        object_code << "obj_" << return_type << " " << class_name << "_method_" << method_name << "(";
 
         //generate the this arg
         object_code << "obj_" << class_name << " this";
@@ -478,10 +531,22 @@ void CodeGenerator::generateClassMethods(std::ofstream & object_code, Class * cu
 void CodeGenerator::bindClassMethods(std::ofstream & object_code, Class * current_class) {
     std::string class_name = current_class->name;
     Class * super = (*this->classes_map)[current_class->super];
-    object_code << "the_class_" << class_name << " = {\n";
+    object_code << "struct class_" << class_name << "_struct the_class_" << class_name << "_struct = {\n";
+
+    object_code << "\tnew_" << class_name;
     //now we define the method pointers
-    object_code << "the_class_" << super->name << ",\n";
-    object_code << "};\n";
+    for(auto method : *current_class->orderedMethods) {
+        if(method->name.compare(class_name) == 0)
+            continue;
+
+        std::string origin_class = method->originClass;
+        std::string method_name = method->name;
+        object_code << ",\n\t" << origin_class << "_method_" << method_name;
+    }
+
+    object_code << "\n};\n";
+    //Now lets generate the singleton
+    object_code << "\n//class singleton\n class_" << class_name << " the_class_" << class_name << " = &the_class_" << class_name << "_struct;\n\n";
 }
 
 
@@ -489,9 +554,11 @@ void CodeGenerator::bindClassMethods(std::ofstream & object_code, Class * curren
 //Generate the classes
 void CodeGenerator::generateClass(std::ofstream & object_code, Class * current_class) {
     debugPrint("Entering generateClass");
+
+
+    this->bindClassMethods(object_code, current_class);
     this->generateConstructor(object_code, current_class);
     this->generateClassMethods(object_code, current_class);
-    this->bindClassMethods(object_code, current_class);
 }
 
 void CodeGenerator::generateInitial(std::ofstream &object_code) {

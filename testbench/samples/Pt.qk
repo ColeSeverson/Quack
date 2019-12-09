@@ -32,6 +32,14 @@
      def PLUS(other: Pt): Pt {
      	 return Pt(this.x + other.x, this.y + other.y); 
      }
+
+     def PRINT() {
+         "(".PRINT();
+         this.x.PRINT();
+         ",".PRINT();
+         this.y.PRINT();
+         ")".PRINT();
+     }
 }
 
 Pt(13,42).PRINT(); 

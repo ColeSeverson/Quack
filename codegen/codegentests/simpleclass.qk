@@ -1,0 +1,6 @@
+class Test(x: Int) {
+    this.x = x;
+}
+
+y = Test(6);
+y.x.PRINT();

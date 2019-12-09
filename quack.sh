@@ -12,4 +12,4 @@ echo "Running parser"
 
 ./bin/parser $1
 mv code.c codegen/
-gcc  ./codegen/code.c codegen/Builtins.o
+gcc -g ./codegen/code.c codegen/Builtins.o
