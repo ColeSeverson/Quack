@@ -1,0 +1,15 @@
+a = "  ";
+a.PRINT();
+a.STRING();
+
+b = 2;
+b.PRINT();
+a.PRINT();
+(b + 4).PRINT();
+a.PRINT();
+b.STRING().PRINT();
+a.PRINT();
+(b * 3).PRINT();
+a.PRINT();
+(b - 1).PRINT();
+a.PRINT();

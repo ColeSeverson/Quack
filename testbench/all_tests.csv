@@ -26,7 +26,7 @@ if_true_init.qk,PASS
 init_before_use_good.qk,PASS
 invalid_super.qk,CLASS_HIERARCHY
 invalid_super_type.qk,TYPE_INF
-not_a_duck.qk,TYPE_INF
+not_a_duck.qk,CLASS_HIERARCHY
 robot.qk,TYPE_INF
 schroedinger.qk,PASS
 schroedinger2.qk,PASS

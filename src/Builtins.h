@@ -215,6 +215,8 @@ struct class_Int_struct {
   obj_Boolean (*LESS) (obj_Int, obj_Int);   /* Introduced */
   obj_Boolean (*GREATER) (obj_Int, obj_Int);
   obj_Int (*PLUS) (obj_Int, obj_Int);       /* Introduced */
+  obj_Int (*MINUS) (obj_Int, obj_Int);       /* Introduced */
+  obj_Int (*TIMES) (obj_Int, obj_Int);       /* Introduced */
 };
 
 extern class_Int the_class_Int; 
@@ -244,5 +246,7 @@ obj_Boolean Int_method_EQUALS(obj_Int this, obj_Obj other);
 obj_Boolean Int_method_LESS(obj_Int this, obj_Int other);
 obj_Boolean Int_method_GREATER(obj_Int this, obj_Int other);
 obj_Int Int_method_PLUS(obj_Int this, obj_Int other);
+obj_Int Int_method_MINUS(obj_Int this, obj_Int other);
+obj_Int Int_method_TIMES(obj_Int this, obj_Int other);
 
 #endif

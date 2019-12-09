@@ -55,21 +55,34 @@ namespace TypeChecker {
         output->returnType = method->getReturnType()->getText();
         return output;
     }
+    bool isSuperType(std::string super_type, std::string sub_type) {
+        while(sub_type.compare("Null")) {
+            debugPrint("ISSUPERTYPE", "ISSUPERTYPE", super_type + ", " + sub_type);
+            if(super_type.compare(sub_type) == 0) {
+                return true;
+            }  
+            sub_type = (*classes)[sub_type]->super;
+        }
+        return false;
+    }
     int compareMethods( Method * one,  Method * two) {
         //same number of arguments?
         if(one->arguments->size() != two->arguments->size()) {
-            //report::error("Method " + one->name + " does not have the same number of arguments as " + two->name);
+            report::error("Method " + one->name + " does not have the same number of arguments as " + two->name);
             return -1;
         }
         //Now we can check argument type
         for(int i = 0; i < one->arguments->size(); i++) {
             if (one->arguments->at(i)->type.compare(two->arguments->at(i)->type) != 0) {
-                //report::error("Arguments of " + one->name + " and " + two->name + " do not have the same type");
+                report::error("Arguments of " + one->name + " and " + two->name + " do not have the same type");
                 return -1;
             }
         }
         if(one->returnType.compare(two->returnType) != 0) {
-            return -1;
+            if(!isSuperType(two->returnType, one->returnType)) {
+                report::error("Return type is not a super type");
+                return -1;
+            }
         }
         return 0;
     }
@@ -142,15 +155,7 @@ namespace TypeChecker {
         }
     }
 
-    bool isSuperType(std::string super_type, std::string sub_type) {
-        while(sub_type.compare("Null")) {
-            if(super_type.compare(sub_type) == 0) {
-                return true;
-            }  
-            sub_type = (*classes)[sub_type]->super;
-        }
-        return false;
-    }
+    
 
     std::string parseExpr( Class * clazz,  Method * method, AST::Statement * stat);
     //this returns a 'location'
@@ -553,6 +558,13 @@ namespace TypeChecker {
                 actuals.push_back(var);
             }
 
+            std::string class_name = construct->getName()->getText();
+            if(class_name.compare("Obj") == 0 || class_name.compare("String") == 0 ||
+                class_name.compare("Int") == 0 || class_name.compare("Boolean") == 0
+                    || class_name.compare("Nothing") == 0){
+                   return class_name;
+            }
+
             //now lets check to make sure the method call lines up
             std::map<std::string,  Class *>::iterator it = classes->find(construct->getName()->getText());
             if(it == classes->end()) {
@@ -769,7 +781,15 @@ namespace TypeChecker {
         intPlus->originClass = "Int";
         intPlus->arguments->push_back(intarg);
 
-         Method * intTimes = new  Method();
+        Method * intMinus = new  Method();
+        intMinus->name="MINUS";
+        intMinus->returnType = "Int";
+        intMinus->arguments = new std::vector< Var *>();
+        intMinus->arguments->push_back(intarg);
+        intMinus->originClass = "Int";
+
+
+        Method * intTimes = new  Method();
         intTimes->name = "TIMES";
         intTimes->returnType = "Int";
         intTimes->arguments = intPlus->arguments;
@@ -816,6 +836,7 @@ namespace TypeChecker {
         orderedIntMethods->push_back(intLess);
         orderedIntMethods->push_back(intGreater);
         orderedIntMethods->push_back(intPlus);
+        orderedIntMethods->push_back(intMinus);
         orderedIntMethods->push_back(intTimes);
         intMethods->insert({"STRING", intStr});
         intMethods->insert({"PRINT", intPrint});
@@ -823,6 +844,7 @@ namespace TypeChecker {
         intMethods->insert({"LESS", intLess});
         intMethods->insert({"GREATER", intGreater});
         intMethods->insert({"PLUS", intPlus});
+        intMethods->insert({"MINUS", intMinus});
         intMethods->insert({"TIMES", intTimes});
 
 
