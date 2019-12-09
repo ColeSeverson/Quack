@@ -6,7 +6,7 @@
 REFLEX_INCLUDE = /usr/local/include/reflex
 REFLEX = reflex --bison-cc --bison-locations --header-file
 BISON = bison
-CC = g++ -std=c++11 -g -gstabs+
+CC = g++ -std=c++11 -g
 BIN = ../bin
 PRODUCT = $(BIN)/parser
 

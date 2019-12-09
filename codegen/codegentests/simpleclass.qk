@@ -1,6 +1,28 @@
 class Test(x: Int) {
     this.x = x;
+
+    def PRINT() {
+        this.x.PRINT();
+    }
+
+    def NUM(): Int {
+        return this.x;
+    }
+}
+
+class Test2() {
+    this.x = 5;
+    this.y = "test";
+
+    def PRINT() {
+        this.y.PRINT();
+    }
 }
 
 y = Test(6);
-y.x.PRINT();
+y.PRINT();
+x = 5 + y.NUM();
+x.PRINT();
+"\t".PRINT();
+z = Test2();
+z.PRINT();

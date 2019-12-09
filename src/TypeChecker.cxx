@@ -14,33 +14,8 @@ namespace TypeChecker {
     typedef struct Structs::Method Method;
     typedef struct Structs::Var Var;
     //define structs for managing definitions
-    /*enum isInit {
-      unseen, no, yes, unknown  
-    };
-    //There isn't really a way to define which node a variable references, since it appears multiple times
-     Var {
-        std::string name;
-        std::string type;
-        isInit init = unseen;
-    };
-     Method {
-        AST::Method * node;
-        std::string name;
-        std::vector< Var *> * arguments;
-        std::map<std::string,  Var *> *table;
-        std::string returnType;
-    };
-     Class {
-        AST::Class * node;
-        std::string name;
-        std::string super;
-         Method *constructor;
-        std::map<std::string,  Method *> *methods;
-        std::map<std::string,  Var *> *fields;
-    } Obj, Int, String, Boolean, Nothing;*/
-    //Note that you cant have methods outside of a class... So we won't use this methods
+
     std::map<std::string, Class *> * classes;
-    // std::map<std::string, Var *> variables;
 
     void debugPrint(std::string classs, std::string method, std::string message) {
         if(debugLevel == 1) {
@@ -243,10 +218,17 @@ namespace TypeChecker {
         }
         return 0;
     }
-
-    std::string classIntersect(std::string one, std::string two) {
-
-        return "";
+    std::string findSuperType(std::string one, std::string two) {
+        while(one.compare("Obj") != 0) {
+            while(two.compare("Obj") != 0) {
+                if (one.compare(two) == 0) {
+                    return one;
+                }
+                two = (*classes)[two]->super;
+            }
+            one = (*classes)[one]->super;
+        }
+        return "Obj";
     }
     std::map<std::string,  Var *> * intersect(std::map<std::string,  Var *> * one, std::map<std::string,  Var *> * two) {
         std::map<std::string,  Var *> *output = new std::map<std::string,  Var *>();
@@ -259,6 +241,7 @@ namespace TypeChecker {
             std::map<std::string,  Var *>::iterator it = two->find(pair.first);
             if(it != two->end()) {
                 in->init = Structs::isInit::yes;
+                in->type = findSuperType(in->type, it->second->type);
             }
             output->insert({in->name, in});
         }
@@ -752,7 +735,7 @@ namespace TypeChecker {
 
         Class * Obj = new Class(); 
         Obj->name = "Obj";
-        Obj->super = "Nothing";
+        Obj->super = "Null";
         Obj->methods = objMethods;
         Obj->orderedMethods = orderedObjMethods;
         Obj->fields = new std::map<std::string,  Var *>();

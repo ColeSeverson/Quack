@@ -1,5 +1,6 @@
 class C1() {
     if True {
+        this.x = "lol";
     } else {
         this.X = 5;
     }
