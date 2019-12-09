@@ -4,7 +4,7 @@
 
 #### Main
 
-if [ "$1" == ""]; then
+if ["$1" == ""]; then
     echo "Please invoke this script with ./quack.sh <filename>"
 fi
 

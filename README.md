@@ -10,6 +10,8 @@ Currently the following has not been implemented:
     -No string PLUS
     -Some typing rules probably don't work correctly (I had to add a lot of spaghetti code to typechecking to make codegen work so hopefully it is all fixed)
     -There are a lot of memory leaks probably. It has been a while since I've done a non-garbage collected language so my Type checking doesn't really do a good job with memory management (since it has to pass structures to the codegen so it can't clean them up)
+    -Newlines don't work (The parser creates a real newline in the generated code so it doesn't compile... Sorry)
+    -Some issues creating Boolean constants
 
 Working and choices:
     -(As far as I can tell) Dynamic Dispatch, Inheritance, Methods and such
